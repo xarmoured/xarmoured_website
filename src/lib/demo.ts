@@ -27,17 +27,17 @@ export const initialSettings = row('site', 'Website settings', 'site', 'publishe
   sales_cta: 'Request an assessment',
 });
 export const initialHome = row('home', 'Homepage', 'home', 'published', {
-  eyebrow: 'OFFENSIVE SECURITY. DEFENSIVE CONFIDENCE.',
-  headline: 'Find the cracks.\nBefore they become breaches.',
+  eyebrow: 'OFFENSIVE SECURITY & SECURITY ENGINEERING',
+  headline: 'Security that survives\ncontact with an attacker.',
   summary:
-    'We test the assumptions your security depends on. Manual penetration testing, actionable research, and security engineering for the systems that matter.',
+    'We trace real attack paths, demonstrate exploitable risk and help engineers verify the fix. Manual penetration testing and security engineering, grounded in evidence.',
   primary_label: 'Request an assessment',
   primary_url: '/assessment',
   secondary_label: 'Explore our approach',
   secondary_url: '/methodology',
-  services_heading: 'Your attack surface.\nOur starting point.',
-  research_heading: 'From curiosity to disclosure.',
-  final_cta: 'Build with confidence.\nLaunch with Xarmoured.',
+  services_heading: 'Different systems.\nThe same depth of attention.',
+  research_heading: 'Questions worth\nfollowing further.',
+  final_cta: 'Put your security\nassumptions to the test.',
   show_research: true,
   show_report: true,
   show_careers: true,
@@ -83,11 +83,47 @@ export const defaultServices = [
 ].map((x, i) =>
   row(`service-${i}`, x[0], x[1], 'published', {
     summary: x[2],
-    description: x[2],
+    category: 'Offensive Security',
+    capability_group: [
+      'Application',
+      'Application',
+      'Application',
+      'Cloud',
+      'Infrastructure',
+      'Engineering',
+    ][i],
+    description:
+      i === 0
+        ? 'We examine the application as a system of identities, workflows and trust boundaries. The goal is to demonstrate where an attacker can act outside their intended permissions, access data or influence a sensitive operation.'
+        : x[2],
+    problem:
+      i === 0
+        ? 'A successful login does not prove that every resource and operation is correctly authorized. Alternate roles, object identifiers and multi-step workflows can expose paths that are easy to miss in feature testing.'
+        : '',
+    audience:
+      i === 0
+        ? 'Engineering and security teams preparing a release, changing authentication, introducing tenant boundaries or seeking an independent assessment of a web application.'
+        : '',
+    attack_paths:
+      i === 0
+        ? '- Change an object identifier and test cross-account access (IDOR/BOLA).\n- Combine session weaknesses with sensitive workflow actions.\n- Follow server-side request handling into unintended network or data access.\n- Test file processing and business workflows for privilege or data exposure.'
+        : '',
+    methodology:
+      'Agree on scope, access and safeguards. Map the system, investigate manually with focused tooling, validate exploitability and document evidence. Coverage follows the technology and threat model; exclusions are explicit.',
+    example_scope:
+      i === 0
+        ? 'Illustrative scope: one staging web application, its supporting API, two test tenants and agreed user roles. Include account creation, privileged workflows, file handling and administrative actions. Asset counts, integrations and testing windows are agreed before authorization.'
+        : '',
+    process:
+      'Scoping and written authorization → kickoff and access validation → mapping and testing → finding validation → report and debrief → remediation discussion → agreed retest.',
+    retesting:
+      'Repeat the original reproduction against the fixed version. Check adjacent behavior within scope and record whether the finding is resolved, partially resolved or still open. Agree the retest window and coverage during scoping.',
     icon: x[3],
     order: i,
     testing_areas:
-      'Authentication and session management\nAuthorization and privilege boundaries\nBusiness logic and data exposure\nConfiguration and input validation',
+      i === 0
+        ? 'Authentication and account recovery\nAuthorization, IDOR and BOLA\nSession lifecycle and token handling\nBusiness logic and workflow abuse\nInjection and input handling\nFile upload, processing and storage\nServer-side request handling\nClient-side issues and browser boundaries\nMisconfiguration and data exposure'
+        : 'Authentication and session management\nAuthorization and privilege boundaries\nBusiness logic and data exposure\nConfiguration and input validation',
     deliverables:
       '## Evidence you can act on\nA validated finding report, reproducible steps, impact analysis, and practical remediation guidance.',
     timeline: 'Defined together during scoping',

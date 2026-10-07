@@ -1,7 +1,9 @@
 import type { MetadataRoute } from 'next';
-export default function robots(): MetadataRoute.Robots {
+import { siteOrigin } from '@/lib/seo';
+export const dynamic = 'force-dynamic';
+export default async function robots(): Promise<MetadataRoute.Robots> {
   return {
-    rules: { userAgent: '*', allow: '/', disallow: ['/admin', '/api', '/auth'] },
-    sitemap: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://xarmoured.com'}/sitemap.xml`,
+    rules: { userAgent: '*', allow: '/', disallow: ['/admin', '/api', '/auth', '/*?preview='] },
+    sitemap: `${await siteOrigin()}/sitemap.xml`,
   };
 }

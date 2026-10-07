@@ -1,3 +1,4 @@
+import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowUpRight, ArrowRight, Check, ShieldCheck } from 'lucide-react';
@@ -9,14 +10,30 @@ import {
   requireUser,
   configured,
 } from '@/lib/server';
-import { defaultServices } from '@/lib/demo';
 import { ButtonLink, Reveal, ServiceIcon, Status } from '@/components/ui';
 import { Markdown } from '@/components/markdown';
 import { SubmissionForm } from '@/components/submission-form';
-export async function generateMetadata({ params }: { params: Promise<{ path: string[] }> }) {
+import { ProcessTimeline, ReportPreview, PublicationList } from '@/components/public-experiences';
+import { lifecycle } from '@/lib/lifecycle';
+import { Breadcrumbs, DetailSchema, pageMetadata } from '@/lib/seo';
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ path: string[] }>;
+  searchParams: Promise<Record<string, string>>;
+}) {
   const { path } = await params;
+  const query = await searchParams;
   const module = (
-    { careers: 'jobs', research: 'research', services: 'services' } as Record<string, string>
+    {
+      careers: 'jobs',
+      research: 'research',
+      services: 'services',
+      resources: 'resources',
+      'case-studies': 'case_studies',
+      industries: 'industries',
+    } as Record<string, string>
   )[path[0]];
   const r =
     module && path[1]
@@ -24,19 +41,25 @@ export async function generateMetadata({ params }: { params: Promise<{ path: str
       : !module
         ? await getRecord('pages', path[0], true)
         : undefined;
-  const seo = (await listRecords('seo', true))[0]?.data || {};
-  return {
-    title: {
-      absolute: (seo.title_template || '%s — Xarmoured').replace(
-        '%s',
-        r?.data.seo_title || r?.title || path[0].replaceAll('-', ' ')
-      ),
-    },
-    description: r?.data.seo_description || r?.data.summary || seo.description,
-    openGraph: {
-      images: r?.data.og_image ? [r.data.og_image] : seo.og_image ? [seo.og_image] : [],
-    },
+  const labels: Record<string, string> = {
+    methodology: 'Our approach',
+    about: 'Company',
+    assessment: 'Request an assessment',
+    research: 'Research',
+    resources: 'Resources',
+    services: 'Services',
+    careers: 'Careers',
+    security: 'Responsible disclosure',
+    'sample-report': 'Sample report',
+    'case-studies': 'Case studies',
   };
+  return pageMetadata(
+    '/' + path.join('/'),
+    r?.data.seo_title || r?.title || labels[path[0]] || path[0].replaceAll('-', ' '),
+    r?.data.seo_description || r?.data.summary,
+    query.preview === 'true',
+    r?.data.og_image
+  );
 }
 export default async function PublicPage({
   params,
@@ -48,10 +71,35 @@ export default async function PublicPage({
   const { path } = await params;
   const query = await searchParams;
   const settings = await siteSettings();
+  const nonce = (await headers()).get('x-nonce') || undefined;
   const [section, slug] = path;
+  const detailSections = [
+    'services',
+    'research',
+    'careers',
+    'resources',
+    'case-studies',
+    'industries',
+    'sample-report',
+  ];
+  if (
+    path.length > 2 ||
+    (path.length > 1 && !detailSections.includes(section)) ||
+    (section === 'sample-report' && slug && query.preview !== 'true')
+  )
+    notFound();
+  if (section === 'contact') redirect('/assessment');
   const previewPage =
     query.preview === 'true' &&
-    !['services', 'research', 'careers', 'assessment'].includes(section);
+    ![
+      'services',
+      'research',
+      'careers',
+      'assessment',
+      'resources',
+      'case-studies',
+      'industries',
+    ].includes(section);
   if (previewPage) await requireUser(`${section === 'sample-report' ? 'reports' : 'pages'}:read`);
   const previewBanner = previewPage ? (
     <div className="preview-banner">
@@ -79,7 +127,7 @@ export default async function PublicPage({
           )}
           <div className="form-trust">
             <ShieldCheck />
-            <h3>Scoped by people. Tested by people.</h3>
+            <h2>Scoped by people. Tested by people.</h2>
             <p>Your enquiry stays private. No automated sales pitch.</p>
             {settings.sales_email && (
               <a href={`mailto:${settings.sales_email}`}>{settings.sales_email} ↗</a>
@@ -98,11 +146,153 @@ export default async function PublicPage({
               .
             </p>
           ) : (
-            <SubmissionForm type="assessment" demo={isDemo} />
+            <SubmissionForm
+              type="assessment"
+              demo={isDemo}
+              nonce={nonce}
+              services={(await listRecords('services', true)).map((r) => r.title)}
+            />
           )}
         </div>
       </div>
     );
+  if (['resources', 'case-studies', 'industries'].includes(section)) {
+    const module = section === 'case-studies' ? 'case_studies' : section;
+    const rows = await listRecords(module, true);
+    let r = rows.find((r) => r.slug === slug);
+    if (slug && query.preview === 'true') {
+      await requireUser(`${module}:read`);
+      r = await getRecord(module, slug);
+    }
+    if (slug) {
+      if (!r) notFound();
+      const related = (await listRecords('services', true)).filter((x) =>
+        String(r!.data.related_services || '')
+          .split('\n')
+          .includes(x.slug)
+      );
+      return (
+        <article className="wrap section detail-page">
+          <Breadcrumbs
+            items={[
+              { label: section.replaceAll('-', ' '), href: `/${section}` },
+              { label: r.title, href: `/${section}/${r.slug}` },
+            ]}
+          />
+          {query.preview === 'true' && (
+            <div className="preview-banner">PRIVATE PREVIEW · Unpublished content</div>
+          )}
+          {intro(r.data.category || section.toUpperCase(), r.title, r.data.summary || '')}
+          {query.preview !== 'true' && (
+            <DetailSchema record={r} section={section} settings={settings} />
+          )}
+          {section === 'case-studies' ? (
+            <>
+              <div className="tag-row">
+                {r.data.customer && <span>{r.data.customer}</span>}
+                {r.data.anonymized && <span className="tiny-tag">ANONYMIZED</span>}
+                {r.data.industry && <span>{r.data.industry}</span>}
+              </div>
+              {[
+                'problem',
+                'scope',
+                'approach',
+                'findings_summary',
+                'business_outcome',
+                'testimonial',
+              ].map(
+                (key) =>
+                  r!.data[key] && (
+                    <section className="xa-service-section" key={key}>
+                      <h2>{key.replaceAll('_', ' ')}</h2>
+                      <Markdown>{r!.data[key]}</Markdown>
+                    </section>
+                  )
+              )}
+            </>
+          ) : (
+            <Markdown>{r.data.content || ''}</Markdown>
+          )}
+          {r.data.download && <ButtonLink href={r.data.download}>Download resource</ButtonLink>}
+          {related.length > 0 && (
+            <div className="xa-related">
+              <h2>Related services</h2>
+              {related.map((x) => (
+                <Link key={x.id} href={`/services/${x.slug}`} className="text-link">
+                  {x.title} ↗
+                </Link>
+              ))}
+            </div>
+          )}
+        </article>
+      );
+    }
+    if (section !== 'resources' && !rows.length) notFound();
+    return (
+      <div className="wrap section">
+        {intro(
+          section === 'resources' ? 'THE RESOURCE LIBRARY' : 'FROM THE PRACTICE',
+          section === 'resources'
+            ? 'Knowledge you can\nput to work.'
+            : section === 'case-studies'
+              ? 'The work. The outcome.'
+              : 'Systems in context.',
+          section === 'resources'
+            ? 'Technical articles, guides and resources. Published when there is something useful to share.'
+            : 'Real contexts, clear scope and documented outcomes.'
+        )}
+        <h2 className="sr-only">Published entries</h2>
+        <PublicationList records={rows} section={section} />
+      </div>
+    );
+  }
+  if (section === 'security') {
+    const policy = settings.disclosure_policy_enabled
+      ? await getRecord('pages', 'security', true)
+      : undefined;
+    return (
+      <div className="wrap section narrow">
+        {intro(
+          'RESPONSIBLE DISCLOSURE',
+          'Found a security issue?',
+          'This page concerns suspected vulnerabilities in systems owned and operated by Xarmoured.'
+        )}
+        <div className="xa-service-section">
+          <h2>Report it privately.</h2>
+          {settings.security_email ? (
+            <>
+              <p>
+                Send a concise description of the affected system, the behavior you observed and
+                minimal reproduction steps. Please redact personal data and credentials.
+              </p>
+              <a className="text-link" href={`mailto:${settings.security_email}`}>
+                {settings.security_email} ↗
+              </a>
+            </>
+          ) : (
+            <p>
+              A dedicated security reporting contact has not been published yet. Use the configured{' '}
+              <Link href="/contact" className="text-link">
+                contact route
+              </Link>{' '}
+              to request a private reporting channel. Do not send sensitive evidence through the
+              assessment form.
+            </p>
+          )}
+        </div>
+        <div className="xa-service-section">
+          <h2>Respect the boundary.</h2>
+          <p>
+            This page does not authorize testing. Avoid accessing other people's data, service
+            disruption, social engineering or testing third-party systems. Do not include secrets in
+            an initial message.
+          </p>
+        </div>
+        {policy?.data.content && <Markdown>{policy.data.content}</Markdown>}
+        <p>No bounty, response deadline or testing authorization is offered by this page.</p>
+      </div>
+    );
+  }
   if (['services', 'research', 'careers'].includes(section)) {
     const module = section === 'careers' ? 'jobs' : section;
     if (
@@ -111,7 +301,7 @@ export default async function PublicPage({
     )
       notFound();
     const rows = await listRecords(module, true);
-    const data = section === 'services' && !rows.length && !configured ? defaultServices : rows;
+    const data = rows;
     if (slug) {
       let record = data.find((r) => r.slug === slug || r.id === slug);
       if (query.preview === 'true') {
@@ -128,7 +318,7 @@ export default async function PublicPage({
                 'Show us how you think. We’re interested in offensive security, security engineering, and vulnerability research.'
               )}
             </div>
-            <SubmissionForm type="application" jobId="general" demo={isDemo} />
+            <SubmissionForm type="application" jobId="general" demo={isDemo} nonce={nonce} />
           </div>
         );
       if (!record) notFound();
@@ -153,14 +343,20 @@ export default async function PublicPage({
               <Link href={`/admin/${module}/${r.id}`}>Return to editor →</Link>
             </div>
           )}
-          <Link className="text-link" href={`/${section}`}>
-            ← {section}
-          </Link>
+          <Breadcrumbs
+            items={[
+              { label: section, href: `/${section}` },
+              { label: r.title, href: `/${section}/${r.slug}` },
+            ]}
+          />
+          {query.preview !== 'true' && (
+            <DetailSchema record={r} section={section} settings={settings} />
+          )}
           {intro(
             section === 'research'
               ? r.data.cve || 'ORIGINAL RESEARCH'
               : section === 'careers'
-                ? `${r.data.department || 'CAREERS'} / ${r.data.location || 'Remote'}`
+                ? `${r.data.department || 'CAREERS'} / ${r.data.location || 'Location to be confirmed'}`
                 : 'OFFENSIVE SECURITY',
             r.title,
             r.data.summary || ''
@@ -182,7 +378,8 @@ export default async function PublicPage({
                   'hiring_process',
                 ].map(
                   (k) =>
-                    r.data[k] && (
+                    r.data[k] != null &&
+                    r.data[k] !== '' && (
                       <section key={k}>
                         <h2>
                           {
@@ -221,7 +418,13 @@ export default async function PublicPage({
               {open && (
                 <div id="apply" className="application-section">
                   <h2>Apply for {r.title}</h2>
-                  <SubmissionForm type="application" jobId={r.id} role={r.title} demo={isDemo} />
+                  <SubmissionForm
+                    type="application"
+                    jobId={r.id}
+                    role={r.title}
+                    demo={isDemo}
+                    nonce={nonce}
+                  />
                 </div>
               )}
             </div>
@@ -237,9 +440,14 @@ export default async function PublicPage({
                   'cwe',
                   'researcher',
                   'disclosed_at',
+                  'category',
+                  'affected_version',
+                  'fixed_version',
+                  'publication_date',
                 ].map(
                   (k) =>
-                    r.data[k] && (
+                    r.data[k] != null &&
+                    r.data[k] !== '' && (
                       <div key={k}>
                         <span className="eyebrow">{k.replaceAll('_', ' ')}</span>
                         <strong>{r.data[k]}</strong>
@@ -248,6 +456,39 @@ export default async function PublicPage({
                 )}
               </div>
               <Markdown>{r.data.content || ''}</Markdown>
+              {r.data.disclosure_timeline && (
+                <section className="xa-service-section">
+                  <h2>Disclosure timeline</h2>
+                  <Markdown>{r.data.disclosure_timeline}</Markdown>
+                </section>
+              )}
+              {(r.data.advisory_url || r.data.github_advisory) && (
+                <div className="references">
+                  <h2>Advisories</h2>
+                  {['advisory_url', 'github_advisory'].map(
+                    (k) =>
+                      r.data[k] != null &&
+                      r.data[k] !== '' && (
+                        <a key={k} href={r.data[k]} rel="noopener noreferrer">
+                          {k === 'advisory_url' ? 'Vendor advisory' : 'GitHub advisory'} ↗
+                        </a>
+                      )
+                  )}
+                </div>
+              )}
+              {r.data.tags && <p className="mono">{r.data.tags}</p>}
+              {r.data.related_services && (
+                <div className="xa-related">
+                  <h2>Related services</h2>
+                  {(await listRecords('services', true))
+                    .filter((x) => String(r.data.related_services).split('\n').includes(x.slug))
+                    .map((x) => (
+                      <Link className="text-link" key={x.id} href={`/services/${x.slug}`}>
+                        {x.title} ↗
+                      </Link>
+                    ))}
+                </div>
+              )}
               {r.data.references && (
                 <div className="references">
                   <h2>References</h2>
@@ -269,6 +510,15 @@ export default async function PublicPage({
           ) : (
             <div className="service-detail">
               <Markdown>{r.data.description || ''}</Markdown>
+              {['problem', 'audience'].map(
+                (key) =>
+                  r.data[key] && (
+                    <section key={key} className="xa-service-section">
+                      <h2>{key === 'problem' ? 'The problem' : 'Who it is for'}</h2>
+                      <Markdown>{r.data[key]}</Markdown>
+                    </section>
+                  )
+              )}
               <h2>What we test</h2>
               <div className="testing-list">
                 {String(r.data.testing_areas || '')
@@ -281,7 +531,71 @@ export default async function PublicPage({
                     </div>
                   ))}
               </div>
-              <Markdown>{r.data.deliverables || ''}</Markdown>
+              {['attack_paths', 'methodology', 'example_scope', 'process'].map(
+                (key) =>
+                  r.data[key] && (
+                    <section key={key} className="xa-service-section">
+                      <h2>
+                        {
+                          (
+                            {
+                              attack_paths: 'Common attack paths',
+                              methodology: 'Testing methodology',
+                              example_scope: 'Example scope',
+                              process: 'Engagement process',
+                            } as Record<string, string>
+                          )[key]
+                        }
+                      </h2>
+                      <Markdown>{r.data[key]}</Markdown>
+                    </section>
+                  )
+              )}
+              <section className="xa-service-section">
+                <h2>What you receive</h2>
+                <Markdown>
+                  {r.data.deliverables ||
+                    'A scoped report with validated findings, reproduction steps, demonstrated impact and remediation guidance. Deliverables are agreed before testing.'}
+                </Markdown>
+              </section>
+              <section className="xa-service-section">
+                <h2>Retesting</h2>
+                <Markdown>
+                  {r.data.retesting ||
+                    'Agree on the retest scope and window during scoping. We repeat the original reproduction against the remediated version and document resolved, partially resolved or remaining findings.'}
+                </Markdown>
+                <Link className="text-link" href="/methodology">
+                  Explore the engagement process ↗
+                </Link>
+              </section>
+              {r.data.related_research && (
+                <div className="xa-related">
+                  <h2>Related research</h2>
+                  {(await listRecords('research', true))
+                    .filter((x) => String(r.data.related_research).split('\n').includes(x.slug))
+                    .map((x) => (
+                      <Link key={x.id} className="text-link" href={`/research/${x.slug}`}>
+                        {x.title} ↗
+                      </Link>
+                    ))}
+                </div>
+              )}
+              {r.data.related_services && (
+                <div className="xa-related">
+                  <h2>Related services</h2>
+                  {(await listRecords('services', true))
+                    .filter(
+                      (x) =>
+                        x.id !== r.id &&
+                        String(r.data.related_services).split('\n').includes(x.slug)
+                    )
+                    .map((x) => (
+                      <Link key={x.id} className="text-link" href={`/services/${x.slug}`}>
+                        {x.title} ↗
+                      </Link>
+                    ))}
+                </div>
+              )}
               {r.data.timeline && <p>Timeline: {r.data.timeline}</p>}
               <ButtonLink href="/assessment">Scope this assessment</ButtonLink>
               {selectedFaqs.length > 0 && (
@@ -322,7 +636,16 @@ export default async function PublicPage({
               ? 'Original research, responsible disclosure, and the lessons that make systems stronger.'
               : 'An early-stage security company for practitioners who care about the details. No inflated titles. Just meaningful work.'
         )}
-        {data.length ? (
+        <h2 className="sr-only">
+          {section === 'careers'
+            ? 'Published positions'
+            : section === 'services'
+              ? 'Published services'
+              : 'Published research'}
+        </h2>
+        {section === 'research' ? (
+          <PublicationList records={data} />
+        ) : data.length ? (
           <div className={section === 'services' ? 'service-grid' : 'listing-rows'}>
             {data.map((r) => (
               <Link
@@ -348,17 +671,15 @@ export default async function PublicPage({
         ) : (
           <div className="public-empty">
             <span className="eyebrow">
-              {section === 'careers' ? 'NO OPEN ROLES' : 'PUBLICATIONS IN PROGRESS'}
+              {section === 'careers' ? 'NO OPEN ROLES' : 'SCOPE BEFORE TESTING'}
             </span>
             <h2>
-              {section === 'careers'
-                ? 'Good people. At the right time.'
-                : 'Good research takes time.'}
+              {section === 'careers' ? 'Good people. At the right time.' : 'Start with the system.'}
             </h2>
             <p>
               {section === 'careers'
                 ? 'We don’t have an open role right now. Future opportunities will appear here.'
-                : 'We publish original findings after responsible disclosure. Check back for our latest work.'}
+                : 'Discuss your assets, security objectives and testing boundaries with a practitioner. Published service details will appear here when enabled.'}
             </p>
           </div>
         )}
@@ -375,52 +696,110 @@ export default async function PublicPage({
       </div>
     );
   }
-  if (section === 'methodology')
+  if (section === 'methodology') {
+    const page = await getRecord('pages', 'methodology', !previewPage);
+    const home = await getRecord('pages', 'home', true);
     return (
       <div className="wrap section">
+        {previewBanner}
         {intro(
-          'OUR APPROACH',
-          'Follow the evidence.\nFinish the work.',
-          'Security testing should leave your team with clarity, not a longer list of questions.'
+          'THE XARMOURED APPROACH',
+          page?.data.headline || 'Follow the evidence.\nVerify the boundary.',
+          page?.data.summary ||
+            'An assessment should explain how a system fails, what the failure permits and how to verify the fix. Every stage has a purpose. Every conclusion needs evidence.'
         )}
+        <h2 className="sr-only">Engagement lifecycle</h2>
+        <ProcessTimeline
+          copy={['scope', 'map', 'test', 'validate', 'report', 'remediate', 'retest'].map(
+            (k) => home?.data[`lifecycle_${k}`]
+          )}
+        />
+        <div className="xa-methodology-intro">
+          <h2>
+            Authorization first.
+            <br />
+            Evidence throughout.
+          </h2>
+          <p>
+            Before testing, agree on ownership, permitted techniques, exclusions, access,
+            environments, windows and emergency contacts. Testing stays within those rules.
+            Automated tools assist exploration; manual investigation establishes the context and
+            validates exploitability.
+          </p>
+        </div>
+        {page?.data.content && <Markdown>{page.data.content}</Markdown>}
         <div className="methodology-details">
-          {[
-            [
-              '01',
-              'Scope & threat model',
-              'We map your environment, identify trust boundaries, agree on rules of engagement, and define success before testing starts.',
-            ],
-            [
-              '02',
-              'Active testing',
-              'Manual exploration, business logic testing, and focused tooling reveal paths a scanner alone cannot validate.',
-            ],
-            [
-              '03',
-              'Validate the impact',
-              'We reproduce each finding and explain what an attacker could achieve within the agreed scope.',
-            ],
-            [
-              '04',
-              'Report & debrief',
-              'Your team receives technical reproduction steps, business impact, and remediation guidance, followed by a focused debrief.',
-            ],
-            [
-              '05',
-              'Retest & verify',
-              'We test the remediated finding and document the result. A fix is complete when it withstands testing.',
-            ],
-          ].map((x) => (
-            <Reveal className="methodology-detail" key={x[0]}>
-              <span>{x[0]}</span>
-              <h2>{x[1]}</h2>
-              <p>{x[2]}</p>
-            </Reveal>
+          {lifecycle.map((x, i) => (
+            <section className="methodology-detail" key={x[0]}>
+              <span>0{i + 1}</span>
+              <h2>{x[0]}</h2>
+              <p>{home?.data[`lifecycle_${x[0].toLowerCase()}`] || x[2]}</p>
+            </section>
           ))}
         </div>
-        <ButtonLink href="/assessment">Plan your assessment</ButtonLink>
+        <div className="xa-method-notes">
+          <div>
+            <span className="eyebrow">RISK RATING</span>
+            <h3>Severity needs context.</h3>
+            <p>
+              Use a documented CVSS vector alongside exploit preconditions, asset sensitivity and
+              demonstrated impact. A technical score supports prioritization; it does not replace
+              the engineering and business context.
+            </p>
+          </div>
+          <div>
+            <span className="eyebrow">EVIDENCE HANDLING</span>
+            <h3>Capture only what is needed.</h3>
+            <p>
+              Agree on evidence storage, transfer and retention before testing. Minimize sensitive
+              data in reproduction artifacts, redact secrets and explain coverage limitations in the
+              final report.
+            </p>
+          </div>
+          <div>
+            <span className="eyebrow">ATTACK CHAINING</span>
+            <h3>Follow relationships.</h3>
+            <p>
+              Where authorized, investigate how smaller weaknesses combine into a meaningful attack
+              path. Stop at the agreed proof point, communicate urgent risk and preserve
+              reproducibility.
+            </p>
+          </div>
+          <div>
+            <span className="eyebrow">CLOSURE</span>
+            <h3>A retest is a result.</h3>
+            <p>
+              Record the tested version, original test, observed behavior and residual limitations.
+              Distinguish resolved findings from partial fixes and items not retested.
+            </p>
+          </div>
+        </div>
+        <span className="eyebrow">FRAMEWORK REFERENCES / SELECTED TO FIT THE SCOPE</span>
+        <div className="xa-reference-grid">
+          {[
+            ['OWASP WSTG', 'https://owasp.org/www-project-web-security-testing-guide/'],
+            ['OWASP API Security', 'https://owasp.org/API-Security/'],
+            ['OWASP MASVS & MASTG', 'https://mas.owasp.org/'],
+            ['CWE', 'https://cwe.mitre.org/'],
+            ['CVSS', 'https://www.first.org/cvss/'],
+            ['NIST SP 800-115', 'https://csrc.nist.gov/pubs/sp/800/115/final'],
+          ].map(([label, url]) => (
+            <a key={label} href={url} rel="noopener noreferrer">
+              {label}
+              <ArrowUpRight size={17} aria-hidden="true" />
+            </a>
+          ))}
+        </div>
+        <p>
+          Frameworks inform coverage where applicable. Referencing a framework does not imply
+          certification or endorsement.
+        </p>
+        <div className="xa-related">
+          <ButtonLink href="/assessment">Define your assessment</ButtonLink>
+        </div>
       </div>
     );
+  }
   if (section === 'about') {
     const team = await listRecords('team', true);
     const page = await getRecord('pages', 'about', !previewPage);
@@ -439,14 +818,39 @@ export default async function PublicPage({
         {page?.data.content && <Markdown>{page.data.content}</Markdown>}
         <div className="about-statement">
           <h2>
-            Small by design.
+            Evidence first.
             <br />
-            Thorough by default.
+            Engineering throughout.
           </h2>
           <p>
             We care about the work behind the report. Understanding a system. Challenging its
             assumptions. Turning a finding into something an engineer can fix.
           </p>
+        </div>
+        <div className="xa-company-principles">
+          {[
+            [
+              'Investigate honestly.',
+              'State what was tested, what was observed and what remains uncertain.',
+            ],
+            [
+              'Make the work reproducible.',
+              'Clear evidence is useful to both the engineer fixing a flaw and the reviewer assessing risk.',
+            ],
+            [
+              'Share responsibly.',
+              'Coordinate disclosure, respect confidentiality and publish only what is ready to be shared.',
+            ],
+            [
+              'Finish the loop.',
+              'Help teams understand the cause and verify remediation against the original failure.',
+            ],
+          ].map(([t, p]) => (
+            <div key={t}>
+              <h3>{t}</h3>
+              <p>{p}</p>
+            </div>
+          ))}
         </div>
         {team.length > 0 && (
           <div className="team-grid">
@@ -458,7 +862,8 @@ export default async function PublicPage({
                 <Markdown>{r.data.bio || ''}</Markdown>
                 {['linkedin', 'github', 'website'].map(
                   (k) =>
-                    r.data[k] && (
+                    r.data[k] != null &&
+                    r.data[k] !== '' && (
                       <a key={k} href={r.data[k]}>
                         {k} ↗
                       </a>
@@ -491,8 +896,10 @@ export default async function PublicPage({
           'Evidence you can act on.',
           'A report should connect technical findings to business decisions, and give engineers a practical path to remediation.'
         )}
+        <h2 className="sr-only">Report anatomy</h2>
+        <ReportPreview />
         {r ? (
-          <div className="report-download">
+          <div className="report-download xa-related">
             <h2>{r.title}</h2>
             <p>{r.data.description}</p>
             <span className="mono">
@@ -502,8 +909,8 @@ export default async function PublicPage({
             {r.data.file && <ButtonLink href={r.data.file}>Download sample report</ButtonLink>}
           </div>
         ) : (
-          <div className="public-empty">
-            <h2>Request a sample report.</h2>
+          <div className="public-empty xa-related">
+            <h2>Discuss the reporting format.</h2>
             <p>
               Our public sample isn’t available yet. Contact us to discuss the reporting format for
               your engagement.

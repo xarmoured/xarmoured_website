@@ -1,0 +1,7 @@
+# SEO strategy
+
+Use content-led service and research pages with useful scope and evidence. No doorway pages, invented articles or keyword stuffing. Dynamic metadata derives from published CMS SEO fields with meaningful route defaults; canonical uses the configured public origin. Twitter/OpenGraph share the same title/description/image. Query previews are noindex, excluded from tracking and sitemap.
+
+Organization schema only uses configured actual information. BreadcrumbList follows visible breadcrumbs. Service schema only on published service details. TechArticle/Article only on populated published research/resources. JobPosting only on genuinely open, nonexpired jobs with description, real location/country (or remote eligibility), and publication date. Closed roles remove markup. See https://developers.google.com/search/docs/appearance/structured-data/job-posting . No FAQ rich-result promises or FAQ schema on this commercial site.
+
+Sitemap is feature-aware and deduplicated; only actual public CMS entries, enabled optional areas and valid routes. Robots excludes admin/API/auth. New resources and security pages have dedicated metadata. Owner must configure NEXT_PUBLIC_SITE_URL, SEO site URL, real social image and legal/company information before indexing production. Validate rendered JSON-LD and canonicals, submit sitemap and inspect real pages in Search Console after launch. No Lighthouse or ranking claims without measurement.

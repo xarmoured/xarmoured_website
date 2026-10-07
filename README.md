@@ -1,6 +1,6 @@
 # Xarmoured Platform
 
-Next.js App Router company website and protected operating workspace. The original static reference remains in `index.html`; the application is in `src/`.
+Next.js App Router company website and protected operating workspace. The application is in `src/`. The public experience uses Xarmoured’s boundary/evidence design language; the existing protected operating workspace remains intact.
 
 ## Run locally
 
@@ -34,6 +34,7 @@ Features: structured editors, Markdown without executable HTML/MDX, draft-only o
    - `supabase/migrations/004_public_settings.sql`
    - `supabase/migrations/005_role_scope.sql`
    - `supabase/migrations/006_ordering.sql`
+   - `supabase/migrations/007_content_architecture.sql`
 3. **Disable public signups in Supabase Auth**. Set the production Site URL and allow `https://your-domain/auth/callback` (plus localhost for development). Configure session lifetime/inactivity controls, password protections, and optional MFA to your operational policy. The app supports passwords and recovery; magic-link/MFA enrollment interfaces are future work.
 4. Initialize only necessary configuration:
 
@@ -59,7 +60,7 @@ Relational tables: `profiles`, `internal_notes`, `record_activity`, `audit_logs`
 
 The centralized TypeScript `can` layer matches SQL permissions. Every API checks server identity, permissions, origin and input. `save_record` atomically writes content, activity and audit history, and detects concurrent editing. `receive_submission` is service-role-only and locks/checks the job before accepting an application. RLS exposes only visible/published content and public-disclosure research. Anonymous users cannot read leads, applicants, notes, audit logs, profiles or private files. Public company settings are exposed through an explicit field projection; internal email templates remain private. Profile roles are changed only through trusted administration.
 
-Auth cookies use HttpOnly, SameSite=Lax and Secure in production. Identity is verified server-side. Security headers include CSP, anti-framing, MIME sniffing protection, and referrer policy. Current rendering requires inline framework scripts/styles in CSP; nonce-based strict CSP is a future hardening extension. Admin responses are private/no-store. Durable rate limits protect login, recovery, intake and events. Use Vercel or a reverse proxy that sanitizes forwarded IP headers.
+Auth cookies use HttpOnly, SameSite=Lax and Secure in production. Identity is verified server-side. Security headers include CSP, anti-framing, MIME sniffing protection, and referrer policy. Request-specific nonces protect scripts; inline styles remain permitted for motion/charts. See `docs/security-review.md`. Admin responses are private/no-store. Durable rate limits protect login, recovery, intake and events. Use Vercel or a reverse proxy that sanitizes forwarded IP headers.
 
 ### Storage and sample reports
 
@@ -104,7 +105,7 @@ npm run build
 node tests/production-smoke.mjs
 ```
 
-Tests exercise actual SQL in embedded PostgreSQL, anonymous/authenticated/server roles, RLS, resumes, role permissions, research safeguards, job publication/audit, transactional intake, closed-job rejection, private notes, and concurrent editing. Browser tests use an isolated development demo for owner workflows and viewport checks at 375/768/1280/1440/1920px. This does not replace staging tests against real Supabase Auth/Storage, Resend and Turnstile. No Lighthouse score is claimed without measurement.
+Tests exercise actual SQL in embedded PostgreSQL, anonymous/authenticated/server roles, RLS, resumes, role permissions, research safeguards, job publication/audit, transactional intake, closed-job rejection, private notes, and concurrent editing. Browser tests use an isolated development demo for owner workflows and viewport checks at 360/375/390/430/768/1024/1280/1440/1920px, both public themes, axe, keyboard navigation and reduced motion. This does not replace staging tests against real Supabase Auth/Storage, Resend and Turnstile. No Lighthouse score is claimed without measurement.
 
 ## Vercel deployment
 
@@ -128,3 +129,17 @@ Authorized CSV exports include explicit limited fields. Internal notes/resume pa
 ## V1 boundaries
 
 One company and one coherent dark workspace. Pipeline updates use accessible status controls rather than drag-and-drop. Services, FAQs, team profiles, and navigation support drag ordering and accessible arrow controls. Notifications refresh on navigation. Lists/search currently cap at 1,000 records; add server pagination before that scale. User provisioning/all-device revocation remain in trusted Supabase utilities. No arbitrary page builder, multi-tenancy, payroll, chat, autonomous AI, client portal, or fake telemetry is included.
+
+## Website evolution
+
+New public architecture: `/resources`, `/resources/[slug]`, `/case-studies` and detail (only when actual public records exist), `/industries` and detail (only when populated), `/security`, `/.well-known/security.txt`, `/contact` → assessment. Research and service details expose richer structured fields. Homepage adds a four-state boundary diagram, grouped capabilities, seven-stage lifecycle, editorial research and an illustrative report explorer. Public themes follow system preference and persist an explicit selection; the operating workspace retains its dark theme. No production service fallback or fictional proof records are published.
+
+Admin adds Resources, Case studies, Industries and Service categories, extends service/advisory metadata, homepage switches/lifecycle copy, job eligibility and disclosure settings. Existing CRM/ATS/media/auth/analytics/audit workflows are preserved. Apply migration 007 before deploying the new app. It expands module/RLS/role/settings allowlists and adds publication constraints without changing existing records.
+
+The only added dependency is development-only `@axe-core/playwright` for automated accessibility checks. `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` optionally selects an existing browser.
+
+Read [the launch checklist](docs/launch-checklist.md) for exact test and deployment steps, [the audit](docs/current-system-audit.md), [benchmark](docs/competitive-benchmark.md), [brand system](docs/brand-system.md), [design system](docs/design-system.md), [information architecture](docs/information-architecture.md), [content model](docs/content-model.md), [security review](docs/security-review.md), and [SEO strategy](docs/seo-strategy.md). Missing security.txt configuration intentionally returns 503; configure a real monitored email, HTTPS canonical and expiry before launch.
+
+Build tooling: `npm run build` explicitly selects Next.js’s supported Webpack bundler. The default Turbopack build stalled on this constrained host during baseline verification; Webpack completed. No runtime dependency was added.
+
+Verification evidence and environment limits are recorded in [docs/verification.md](docs/verification.md). The complete development E2E workflow remains a release gate: this constrained host lost its Next dev server during the run. Production browser/security smoke checks are separate and passed. Run `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:production` after building to include browser, accessibility and responsive checks; without that variable the production smoke script runs HTTP checks only.

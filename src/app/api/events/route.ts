@@ -10,6 +10,9 @@ export async function POST(req: Request) {
     if (
       ![
         'page_view',
+        'job_view',
+        'sample_report_view',
+        'cta_used',
         'service_view',
         'assessment_start',
         'booking_click',

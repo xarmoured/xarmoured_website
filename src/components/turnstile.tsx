@@ -6,7 +6,7 @@ type Api = {
   remove: (id: string) => void;
   reset: (id: string) => void;
 };
-export function Turnstile({ retry }: { retry: number }) {
+export function Turnstile({ retry, nonce }: { retry: number; nonce?: string }) {
   const container = useRef<HTMLDivElement>(null);
   const widget = useRef<string | undefined>(undefined);
   const api = () => (window as Window & { turnstile?: Api }).turnstile;
@@ -14,7 +14,7 @@ export function Turnstile({ retry }: { retry: number }) {
     if (container.current && api() && widget.current === undefined)
       widget.current = api()!.render(container.current, {
         sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
-        theme: 'dark',
+        theme: 'auto',
         size: 'flexible',
       });
   }
@@ -31,6 +31,7 @@ export function Turnstile({ retry }: { retry: number }) {
   return (
     <>
       <Script
+        nonce={nonce}
         src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
         strategy="afterInteractive"
         onReady={render}

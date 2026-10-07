@@ -19,6 +19,8 @@ export async function POST(req: Request) {
     await rateLimit('submission', 6);
     const form = await req.formData();
     const type = form.get('type');
+    if (!['assessment', 'application'].includes(String(type)))
+      return NextResponse.json({ error: 'Unsupported submission type.' }, { status: 422 });
     const module = type === 'application' ? 'applications' : 'leads';
     if (form.get('website_check')) throw new Error('Unable to submit.');
     if (!isDemo) {

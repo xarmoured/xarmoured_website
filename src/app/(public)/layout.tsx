@@ -1,12 +1,14 @@
 import { PublicHeader, PublicFooter } from '@/components/public-shell';
 import { listRecords, siteSettings, isDemo } from '@/lib/server';
 import { AnalyticsTracker } from '@/components/tracker';
+import { headers } from 'next/headers';
+import { siteOrigin } from '@/lib/seo';
 export const dynamic = 'force-dynamic';
 export async function generateMetadata() {
   const seo = (await listRecords('seo', true))[0]?.data || {};
   let metadataBase: URL | undefined;
   try {
-    if (seo.site_url) metadataBase = new URL(seo.site_url);
+    metadataBase = new URL(await siteOrigin());
   } catch {}
   return {
     metadataBase,
@@ -15,11 +17,14 @@ export async function generateMetadata() {
   };
 }
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const [settings, links, announcements] = await Promise.all([
+  const [settings, links, announcements, services, categories] = await Promise.all([
     siteSettings(),
     listRecords('navigation', true),
     listRecords('announcements', true),
+    listRecords('services', true),
+    listRecords('service_categories', true),
   ]);
+  const nonce = (await headers()).get('x-nonce') || undefined;
   const now = new Date().toISOString().slice(0, 10);
   const seo = (await listRecords('seo', true))[0]?.data || {};
   const banner =
@@ -31,9 +36,10 @@ export default async function PublicLayout({ children }: { children: React.React
         )
       : null;
   return (
-    <>
+    <div className="public-site">
       {seo.site_url && (
         <script
+          nonce={nonce}
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
@@ -47,7 +53,7 @@ export default async function PublicLayout({ children }: { children: React.React
           }}
         />
       )}
-      <PublicHeader settings={settings} links={links} />
+      <PublicHeader settings={settings} links={links} services={services} categories={categories} />
       {isDemo && (
         <div className="demo-banner">
           DEVELOPMENT DEMO · All sample jobs, research, leads, and applications are fictional.
@@ -62,8 +68,8 @@ export default async function PublicLayout({ children }: { children: React.React
         </div>
       )}
       <main id="main">{children}</main>
-      <PublicFooter settings={settings} links={links} />
+      <PublicFooter settings={settings} links={links} services={services} />
       <AnalyticsTracker />
-    </>
+    </div>
   );
 }

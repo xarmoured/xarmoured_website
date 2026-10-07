@@ -50,7 +50,16 @@ export function Editor({
     ? {
         ...record,
         data: Object.fromEntries(
-          Object.entries(record.data).filter(([key]) => !['notes'].includes(key))
+          Object.entries({
+            ...(module === 'pages'
+              ? Object.fromEntries(
+                  config.fields
+                    .filter((f) => f.key.startsWith('show_') && f.key !== 'show_labs')
+                    .map((f) => [f.key, true])
+                )
+              : {}),
+            ...record.data,
+          }).filter(([key]) => !['notes'].includes(key))
         ),
       }
     : {
@@ -517,7 +526,15 @@ export function Editor({
             {!business && writable && (
               <>
                 <p>Review the rendering before making content public.</p>
-                {['research', 'jobs', 'services', 'pages'].includes(module) && (
+                {[
+                  'research',
+                  'jobs',
+                  'services',
+                  'pages',
+                  'resources',
+                  'case_studies',
+                  'industries',
+                ].includes(module) && (
                   <button className="button compact full" disabled={busy} onClick={publish}>
                     <ArrowUpRight size={15} />
                     {module === 'jobs' ? 'Open applications' : 'Publish content'}

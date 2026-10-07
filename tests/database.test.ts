@@ -26,6 +26,7 @@ beforeAll(async () => {
     '004_public_settings.sql',
     '005_role_scope.sql',
     '006_ordering.sql',
+    '007_content_architecture.sql',
   ]) {
     const sql = await readFile(new URL('../supabase/migrations/' + file, import.meta.url), 'utf8');
     await db.exec(sql.replace('create extension if not exists pgcrypto;', ''));
@@ -38,6 +39,63 @@ afterAll(async () => {
   await db.close();
 });
 describe.sequential('Actual PostgreSQL security and workflows', () => {
+  it('protects new module publication and mirrors editorial permissions in SQL', async () => {
+    await role('authenticated', editor);
+    const resource = '60000000-0000-4000-8000-000000000001';
+    await db.query(
+      `select save_record($1,'resources','Reviewed guide','reviewed-guide','draft','{"content":"Actual guide"}',null)`,
+      [resource]
+    );
+    await role('anon');
+    expect((await db.query(`select * from records where id=$1`, [resource])).rows).toHaveLength(0);
+    await role('authenticated', editor);
+    const { rows } = await db.query<{ updated_at: string }>(
+      `select updated_at::text from records where id=$1`,
+      [resource]
+    );
+    await db.query(
+      `select save_record($1,'resources','Reviewed guide','reviewed-guide','published','{"content":"Actual guide"}',$2)`,
+      [resource, rows[0].updated_at]
+    );
+    await role('anon');
+    expect((await db.query(`select * from records where id=$1`, [resource])).rows).toHaveLength(1);
+    await role('authenticated', editor);
+    await expect(
+      db.query(
+        `select save_record(gen_random_uuid(),'case_studies','Private case','private-case','published','{"visibility":"private","scope":"Agreed","business_outcome":"Verified"}',null)`
+      )
+    ).rejects.toThrow();
+    await expect(
+      db.query(
+        `select save_record(gen_random_uuid(),'services','Empty service','empty-service','published','{}',null)`
+      )
+    ).rejects.toThrow();
+    await db.exec('begin');
+    await db.query(
+      `select save_record(gen_random_uuid(),'services','Complete service','complete-service','published','{"summary":"Approved scope","description":"Manual testing","testing_areas":"Authorization"}',null)`
+    );
+    await role('anon');
+    expect(
+      (await db.query("select * from records where slug='complete-service'")).rows
+    ).toHaveLength(1);
+    await db.exec('rollback');
+    await role('authenticated', recruiter);
+    await expect(
+      db.query(
+        `select save_record(gen_random_uuid(),'resources','Denied','denied','draft','{}',null)`
+      )
+    ).rejects.toThrow('Forbidden');
+    // Remove test resource from later public-count assertions without deleting it.
+    await role('authenticated', editor);
+    const latest = await db.query<{ updated_at: string }>(
+      `select updated_at::text from records where id=$1`,
+      [resource]
+    );
+    await db.query(
+      `select save_record($1,'resources','Reviewed guide','reviewed-guide','archived','{}',$2)`,
+      [resource, latest.rows[0].updated_at]
+    );
+  });
   it('reorders content atomically and rejects unauthorized or stale updates', async () => {
     await role('authenticated', owner);
     const ids = ['50000000-0000-4000-8000-000000000001', '50000000-0000-4000-8000-000000000002'];

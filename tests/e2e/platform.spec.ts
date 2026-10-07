@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 test.describe.serial('Owner workflows in explicitly isolated development demo', () => {
   let jobUrl = '';
   test('creates, previews, and publishes a job without source changes', async ({ page }) => {
@@ -98,7 +99,7 @@ test.describe.serial('Owner workflows in explicitly isolated development demo', 
     await page
       .getByLabel('Research content')
       .fill(
-        '## DEMO advisory\nThis is fictional development content used to verify the publishing workflow.'
+        '## DEMO advisory\nThis is fictional development content used to verify the publishing workflow.\n\n```js\nconst scope = "DEMO";\n```'
       );
     await page.getByRole('button', { name: 'Preview', exact: true }).click();
     await page.getByRole('button', { name: 'Mark preview reviewed' }).click();
@@ -109,6 +110,24 @@ test.describe.serial('Owner workflows in explicitly isolated development demo', 
     await expect(
       page.getByRole('heading', { name: 'DEMO · Confidential Browser Research' })
     ).toBeVisible();
+    await page.goto('/research/demo-confidential-browser-research');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'DEMO · Confidential Browser Research'
+    );
+    await expect(page.getByRole('link', { name: 'Link to DEMO advisory' })).toBeVisible();
+    for (const theme of ['dark', 'light']) {
+      for (const width of [390, 1440]) {
+        await page.setViewportSize({ width, height: 1000 });
+        await page.getByRole('combobox', { name: 'Color theme' }).selectOption(theme);
+        const result = await new AxeBuilder({ page })
+          .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+          .analyze();
+        expect(result.violations, `Research detail ${theme} ${width}`).toEqual([]);
+        expect(
+          await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)
+        ).toBe(true);
+      }
+    }
   });
   test('command palette locates actions and records', async ({ page }) => {
     await page.goto('/admin');
@@ -141,6 +160,10 @@ test('responsive public and admin screens remain within the viewport', async ({ 
       '/sample-report',
       '/admin/applications',
       '/admin/research',
+      '/admin/resources',
+      '/admin/case_studies',
+      '/admin/industries',
+      '/admin/service_categories',
       '/admin/services',
       '/admin/pages',
       '/admin/faqs',

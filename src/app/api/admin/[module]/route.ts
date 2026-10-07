@@ -59,7 +59,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ module:
 
     if (record.status === 'published' || record.status === 'open') {
       if (!can(user.role, `${module}:publish`)) throw new Error('You cannot publish this content.');
-      if (['research', 'jobs', 'services', 'pages'].includes(module) && !body.previewed)
+      if (
+        [
+          'research',
+          'jobs',
+          'services',
+          'pages',
+          'resources',
+          'case_studies',
+          'industries',
+        ].includes(module) &&
+        !body.previewed
+      )
         throw new Error('Preview this version before publishing.');
     }
     const all = await listRecords(module);

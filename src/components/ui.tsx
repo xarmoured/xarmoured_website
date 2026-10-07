@@ -16,9 +16,9 @@ export function Reveal({
     <motion.div
       className={className}
       initial={false}
-      whileInView={reduced ? { opacity: 1, y: 0 } : { opacity: [0.8, 1], y: [10, 0] }}
+      whileInView={reduced ? { y: 0 } : { y: [10, 0] }}
       viewport={{ once: true, amount: 0.1 }}
-      transition={{ duration: 0.4, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: reduced ? 0 : 0.4, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>
@@ -72,11 +72,10 @@ export function ButtonLink({
   );
 }
 export function Status({ value }: { value: string }) {
-  const reduced = useReducedMotion();
   return (
     <motion.span
       initial={false}
-      animate={{ opacity: reduced ? 1 : [0.7, 1] }}
+      animate={{ opacity: 1 }}
       transition={{ duration: 0.16 }}
       className={`status ${['published', 'open', 'won', 'hired', 'public'].includes(value) ? 'good' : ['draft', 'new', 'reviewing', 'scoping', 'paused'].includes(value) ? 'warm' : value === 'lost' || value === 'rejected' ? 'bad' : ''}`}
     >

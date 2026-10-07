@@ -10,16 +10,21 @@ export function SubmissionForm({
   jobId = '',
   role = '',
   demo = false,
+  services = [],
+  nonce,
 }: {
   type: 'assessment' | 'application';
   jobId?: string;
   role?: string;
   demo?: boolean;
+  services?: string[];
+  nonce?: string;
 }) {
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
+  const summaryRef = useRef<HTMLDivElement>(null);
   const {
     register,
     handleSubmit,
@@ -28,14 +33,22 @@ export function SubmissionForm({
     resolver: zodResolver(type === 'assessment' ? leadSchema : applicationSchema),
     defaultValues: { job_id: jobId },
   });
-  useEffect(() => {
-    if (type === 'assessment')
-      fetch('/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event: 'assessment_start', path: '/assessment' }),
-      }).catch(() => {});
-  }, [type]);
+  const started = useRef(false);
+  function trackStart() {
+    if (
+      type !== 'assessment' ||
+      started.current ||
+      new URLSearchParams(window.location.search).get('preview') === 'true'
+    )
+      return;
+    started.current = true;
+    fetch('/api/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event: 'assessment_start', path: '/assessment' }),
+      keepalive: true,
+    }).catch(() => {});
+  }
   async function submit() {
     setError('');
     const form = new FormData(formRef.current!);
@@ -79,15 +92,60 @@ export function SubmissionForm({
       {label}
       {required && <span className="accent"> *</span>}
       {kind === 'textarea' ? (
-        <textarea {...register(key)} rows={4} placeholder={placeholder} />
+        <textarea
+          {...register(key)}
+          id={`field-${key}`}
+          aria-invalid={!!errors[key]}
+          aria-describedby={errors[key] ? `error-${key}` : undefined}
+          rows={4}
+          placeholder={placeholder}
+        />
       ) : (
-        <input {...register(key)} type={kind} placeholder={placeholder} />
+        <input
+          {...register(key)}
+          id={`field-${key}`}
+          aria-invalid={!!errors[key]}
+          aria-describedby={errors[key] ? `error-${key}` : undefined}
+          type={kind}
+          placeholder={placeholder}
+          autoComplete={
+            (
+              {
+                name: 'name',
+                email: 'email',
+                company: 'organization',
+                role: 'organization-title',
+              } as Record<string, string>
+            )[key]
+          }
+        />
       )}
-      <span className="error-text">{errors[key]?.message as string}</span>
+      <span id={`error-${key}`} className="error-text">
+        {errors[key]?.message as string}
+      </span>
     </label>
   );
   return (
-    <form className="public-form" ref={formRef} onSubmit={handleSubmit(submit)}>
+    <form
+      className="public-form"
+      ref={formRef}
+      onFocus={trackStart}
+      onSubmit={handleSubmit(submit, () =>
+        requestAnimationFrame(() => summaryRef.current?.focus())
+      )}
+    >
+      {Object.keys(errors).length > 0 && (
+        <div className="form-error" role="alert" tabIndex={-1} ref={summaryRef}>
+          <strong>Review the highlighted fields.</strong>
+          <ul>
+            {Object.entries(errors).map(([key, value]) => (
+              <li key={key}>
+                <a href={`#field-${key}`}>{String(value?.message || key)}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <input type="hidden" {...register('job_id')} />
       <input
         className="honeypot"
@@ -102,6 +160,7 @@ export function SubmissionForm({
         {type === 'assessment' ? (
           <>
             {input('company', 'Company', 'text', true)}
+            {input('role', 'Your role')}
             {input('website', 'Website', 'url')}
           </>
         ) : (
@@ -115,29 +174,72 @@ export function SubmissionForm({
         <>
           <label>
             What would you like tested? <span className="accent">*</span>
-            <select {...register('services')}>
+            <select
+              {...register('services')}
+              id="field-services"
+              aria-invalid={!!errors.services}
+              aria-describedby={errors.services ? 'error-services' : undefined}
+            >
               <option value="">Select a service</option>
-              {[
-                'Web Application VAPT',
-                'API Security Testing',
-                'Mobile Application Security',
-                'Cloud Security Assessment',
-                'Network & Infrastructure',
-                'Source Code Review',
-                'Retest',
-                'Multiple services',
-              ].map((s) => (
+              {[...services, 'Retest an existing finding', 'Discuss scope'].map((s) => (
                 <option key={s}>{s}</option>
               ))}
             </select>
-            <span className="error-text">{errors.services?.message as string}</span>
+            <span id="error-services" className="error-text">
+              {errors.services?.message as string}
+            </span>
           </label>
           <div className="form-grid">
             {input('timeline', 'Preferred timeline')}
-            {input('compliance', 'Compliance requirements')}
-            {input('application_count', 'Number of applications', 'number')}
-            {input('roles', 'User roles')}
+            <label>
+              Target type
+              <select {...register('target_type')}>
+                <option value="">Select…</option>
+                {['Web', 'API', 'Mobile', 'Cloud', 'Network', 'Code', 'Multiple', 'Unsure'].map(
+                  (x) => (
+                    <option key={x}>{x}</option>
+                  )
+                )}
+              </select>
+            </label>
           </div>
+          <details className="xa-scope-details">
+            <summary>
+              Add technical scope (optional)<span aria-hidden="true">+</span>
+            </summary>
+            <div className="form-grid">
+              <label>
+                Authenticated testing
+                <select {...register('authenticated')}>
+                  <option value="">Select…</option>
+                  {['Yes', 'No', 'Unsure'].map((x) => (
+                    <option key={x}>{x}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Testing environment
+                <select {...register('environment_type')}>
+                  <option value="">Select…</option>
+                  {['Production', 'Staging', 'Both', 'Unsure'].map((x) => (
+                    <option key={x}>{x}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Retest required?
+                <select {...register('retest')}>
+                  <option value="">Select…</option>
+                  {['Yes', 'No', 'Discuss during scoping'].map((x) => (
+                    <option key={x}>{x}</option>
+                  ))}
+                </select>
+              </label>
+              {input('compliance', 'Compliance requirements')}
+              {input('application_count', 'Number of applications', 'number')}
+              {input('roles', 'User roles')}
+            </div>
+          </details>
           {input('environment', 'Environment / scope', 'textarea')}
           {input('message', 'Anything else we should know?', 'textarea')}
         </>
@@ -159,7 +261,9 @@ export function SubmissionForm({
           </label>
         </>
       )}
-      {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !demo && <Turnstile retry={retry} />}
+      {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !demo && (
+        <Turnstile retry={retry} nonce={nonce} />
+      )}
       {error && (
         <div className="form-error" role="alert">
           {error}

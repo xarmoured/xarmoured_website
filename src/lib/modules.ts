@@ -51,6 +51,7 @@ export const modules: Record<string, Module> = {
     fields: [
       f('department', 'Department'),
       f('location', 'Location'),
+      f('job_country', 'Country / remote applicant eligibility country'),
       f('remote', 'Remote status', 'select', 'Overview', ['remote', 'hybrid', 'onsite']),
       f('employment', 'Employment type', 'select', 'Overview', [
         'Full time',
@@ -81,6 +82,22 @@ export const modules: Record<string, Module> = {
     fields: [
       f('summary', 'Summary', 'textarea'),
       f('content', 'Research content', 'markdown', 'Content'),
+      f('category', 'Research type', 'select', 'Overview', [
+        'Vulnerability Research',
+        'Advisories',
+        'Write-ups',
+        'Techniques',
+        'Tools',
+      ]),
+      f('affected_version', 'Affected versions', undefined, 'Disclosure'),
+      f('fixed_version', 'Fixed versions', undefined, 'Disclosure'),
+      f('advisory_url', 'Advisory URL', 'url', 'Disclosure'),
+      f('github_advisory', 'GitHub advisory URL', 'url', 'Disclosure'),
+      f('disclosure_timeline', 'Disclosure timeline', 'markdown', 'Disclosure'),
+      f('publication_date', 'Publication date', 'date', 'Content'),
+      f('tags', 'Tags (comma separated)', undefined, 'Content'),
+      f('related_services', 'Related service slugs (one per line)', 'textarea', 'Content'),
+      f('featured', 'Featured', 'checkbox'),
       f('disclosure', 'Disclosure status', 'select', 'Disclosure', [
         'private',
         'coordinating',
@@ -118,6 +135,29 @@ export const modules: Record<string, Module> = {
     fields: [
       f('summary', 'Short description', 'textarea'),
       f('description', 'Hero description', 'markdown'),
+      f('category', 'Service category', 'select', 'Overview', [
+        'Offensive Security',
+        'Security Engineering',
+        'Continuous Assurance',
+      ]),
+      f('capability_group', 'Capability group', 'select', 'Overview', [
+        'Application',
+        'Infrastructure',
+        'Cloud',
+        'Adversary',
+        'Engineering',
+        'Emerging Technology',
+      ]),
+      f('problem', 'Problem', 'markdown', 'Details'),
+      f('audience', 'Who it is for', 'markdown', 'Details'),
+      f('attack_paths', 'Common attack paths', 'markdown', 'Details'),
+      f('methodology', 'Testing methodology', 'markdown', 'Methodology'),
+      f('example_scope', 'Example scope', 'markdown', 'Methodology'),
+      f('process', 'Engagement process', 'markdown', 'Methodology'),
+      f('retesting', 'Retesting', 'markdown', 'Methodology'),
+      f('related_research', 'Related research slugs (one per line)', 'textarea', 'Related'),
+      f('related_services', 'Related service slugs (one per line)', 'textarea', 'Related'),
+      f('featured', 'Featured', 'checkbox'),
       f('icon', 'Icon', 'select', 'Overview', [
         'globe',
         'code',
@@ -157,6 +197,18 @@ export const modules: Record<string, Module> = {
       f('show_report', 'Show sample report', 'checkbox', 'Sections'),
       f('show_careers', 'Show careers callout', 'checkbox', 'Sections'),
       f('show_labs', 'Show Labs', 'checkbox', 'Sections'),
+      ...[
+        'problem',
+        'services',
+        'lifecycle',
+        'principles',
+        'case_studies',
+        'industries',
+        'faq',
+      ].map((key) => f(`show_${key}`, `Show ${key.replaceAll('_', ' ')}`, 'checkbox', 'Sections')),
+      ...['scope', 'map', 'test', 'validate', 'report', 'remediate', 'retest'].map((key) =>
+        f(`lifecycle_${key}`, `Lifecycle: ${key}`, 'textarea', 'Lifecycle')
+      ),
       f('content', 'Page content', 'markdown', 'Content'),
       ...seo,
     ],
@@ -175,6 +227,12 @@ export const modules: Record<string, Module> = {
         'Mobile',
         'Careers',
         'Privacy',
+        'Engagement',
+        'Technical',
+        'Operations',
+        'Data handling',
+        'Retesting',
+        'Reporting',
       ]),
       f('order', 'Display order', 'number'),
     ],
@@ -202,6 +260,11 @@ export const modules: Record<string, Module> = {
     statuses: ['new', 'contacted', 'qualified', 'scoping', 'proposal', 'won', 'lost', 'archived'],
     fields: [
       f('company', 'Company'),
+      f('role', 'Contact role'),
+      f('target_type', 'Target type', undefined, 'Scope'),
+      f('authenticated', 'Authenticated testing', undefined, 'Scope'),
+      f('environment_type', 'Production or staging', undefined, 'Scope'),
+      f('retest', 'Retest requested', undefined, 'Scope'),
       f('name', 'Contact name'),
       f('email', 'Email', 'email'),
       f('website', 'Website', 'url'),
@@ -302,6 +365,16 @@ export const modules: Record<string, Module> = {
       f('support_email', 'Support email', 'email', 'Contact'),
       f('careers_email', 'Careers email', 'email', 'Contact'),
       f('security_email', 'Security email', 'email', 'Contact'),
+      f('security_canonical', 'security.txt canonical HTTPS URL', 'url', 'Security'),
+      f('security_policy', 'Disclosure policy HTTPS URL', 'url', 'Security'),
+      f('security_languages', 'Preferred languages (comma separated)', undefined, 'Security'),
+      f(
+        'security_expires',
+        'security.txt expiration date (review at least annually)',
+        'date',
+        'Security'
+      ),
+      f('disclosure_policy_enabled', 'Publish reviewed disclosure policy', 'checkbox', 'Security'),
       f('linkedin', 'LinkedIn', 'url', 'Social'),
       f('github', 'GitHub', 'url', 'Social'),
       f('twitter', 'X / Twitter', 'url', 'Social'),
@@ -364,6 +437,80 @@ export const modules: Record<string, Module> = {
       f('bucket', 'Bucket', 'select', 'Overview', ['public-assets', 'private-internal']),
     ],
   },
+  service_categories: {
+    label: 'Service categories',
+    singular: 'Service category',
+    description: 'Group real capabilities. Empty categories stay hidden.',
+    statuses: ['draft', 'published', 'archived'],
+    fields: [f('summary', 'Summary', 'textarea'), f('order', 'Display order', 'number')],
+  },
+  resources: {
+    label: 'Resources',
+    singular: 'Resource',
+    description: 'Publish reviewed articles, guides and downloads.',
+    statuses: ['draft', 'published', 'archived'],
+    publicPath: '/resources',
+    fields: [
+      f('summary', 'Summary', 'textarea'),
+      f('category', 'Resource type', 'select', 'Overview', [
+        'Technical article',
+        'Security guide',
+        'Checklist',
+        'Methodology explainer',
+        'Report',
+        'Download',
+      ]),
+      f('content', 'Content', 'markdown', 'Content'),
+      f('download', 'Download URL', 'url', 'Content'),
+      f('publication_date', 'Publication date', 'date'),
+      f('tags', 'Tags (comma separated)'),
+      f('featured', 'Featured', 'checkbox'),
+      f('order', 'Display order', 'number'),
+      ...seo,
+    ],
+  },
+  case_studies: {
+    label: 'Case studies',
+    singular: 'Case study',
+    description: 'Real engagements, reviewed for confidentiality and publication permission.',
+    statuses: ['draft', 'published', 'archived'],
+    publicPath: '/case-studies',
+    fields: [
+      f('summary', 'Summary', 'textarea'),
+      f('customer', 'Customer or anonymized organization'),
+      f('anonymized', 'Anonymized', 'checkbox'),
+      f('industry', 'Industry'),
+      f('visibility', 'Visibility', 'select', 'Overview', ['private', 'public']),
+      ...[
+        'problem',
+        'scope',
+        'approach',
+        'findings_summary',
+        'business_outcome',
+        'testimonial',
+      ].map((key) => f(key, key.replaceAll('_', ' '), 'markdown', 'Content')),
+      f('related_services', 'Related service slugs (one per line)', 'textarea', 'Content'),
+      f('publication_date', 'Publication date', 'date'),
+      f('featured', 'Featured', 'checkbox'),
+      f('order', 'Display order', 'number'),
+      ...seo,
+    ],
+  },
+  industries: {
+    label: 'Industries',
+    singular: 'Industry',
+    description: 'Useful contexts supported by actual experience.',
+    statuses: ['draft', 'published', 'archived'],
+    publicPath: '/industries',
+    fields: [
+      f('summary', 'Summary', 'textarea'),
+      f('content', 'Content', 'markdown', 'Content'),
+      f('related_services', 'Related service slugs (one per line)', 'textarea', 'Content'),
+      f('featured', 'Featured', 'checkbox'),
+      f('order', 'Display order', 'number'),
+      ...seo,
+    ],
+  },
   activity: {
     label: 'Activity',
     singular: 'Event',
@@ -390,6 +537,10 @@ export function can(role: Role, permission: string) {
       (role === 'viewer' && resource === 'analytics') ||
       (role === 'editor' &&
         [
+          'resources',
+          'case_studies',
+          'industries',
+          'service_categories',
           'pages',
           'services',
           'research',
@@ -408,6 +559,10 @@ export function can(role: Role, permission: string) {
   return (
     (role === 'editor' &&
       [
+        'resources',
+        'case_studies',
+        'industries',
+        'service_categories',
         'pages',
         'services',
         'research',
@@ -486,8 +641,64 @@ export function recordSchema(module: string) {
           message: 'Only PUBLIC disclosure research can be published.',
         });
       if (
+        module === 'services' &&
+        record.status === 'published' &&
+        ['summary', 'description', 'testing_areas'].some(
+          (key) => !String(record.data[key] || '').trim()
+        )
+      )
+        ctx.addIssue({
+          code: 'custom',
+          path: ['data', 'summary'],
+          message: 'Published services need a summary, description and testing areas.',
+        });
+      if (
+        module === 'case_studies' &&
+        record.status === 'published' &&
+        (record.data.visibility !== 'public' || !record.data.business_outcome || !record.data.scope)
+      )
+        ctx.addIssue({
+          code: 'custom',
+          path: ['data', 'visibility'],
+          message:
+            'Published case studies need public visibility, scope and a real business outcome.',
+        });
+      for (const field of config.fields) {
+        const value = record.data[field.key];
+        if (
+          field.type === 'date' &&
+          value &&
+          (!/^\d{4}-\d{2}-\d{2}$/.test(String(value)) ||
+            Number.isNaN(Date.parse(String(value))) ||
+            new Date(String(value)).toISOString().slice(0, 10) !== value)
+        )
+          ctx.addIssue({ code: 'custom', path: ['data', field.key], message: 'Use a valid date.' });
+        if (
+          ['security_canonical', 'security_policy'].includes(field.key) &&
+          value &&
+          !String(value).startsWith('https://')
+        )
+          ctx.addIssue({
+            code: 'custom',
+            path: ['data', field.key],
+            message: 'Use an absolute HTTPS URL.',
+          });
+      }
+      if (
+        record.data.security_languages &&
+        !/^[a-zA-Z]{2,8}(?:-[a-zA-Z0-9]{1,8})*(?:\s*,\s*[a-zA-Z]{2,8}(?:-[a-zA-Z0-9]{1,8})*)*$/.test(
+          String(record.data.security_languages)
+        )
+      )
+        ctx.addIssue({
+          code: 'custom',
+          path: ['data', 'security_languages'],
+          message: 'Use comma-separated language tags, such as en, hi.',
+        });
+      if (
         module === 'research' &&
-        record.data.cvss &&
+        record.data.cvss != null &&
+        record.data.cvss !== '' &&
         (Number(record.data.cvss) < 0 || Number(record.data.cvss) > 10)
       )
         ctx.addIssue({
@@ -510,8 +721,19 @@ export const leadSchema = z.object({
   name: z.string().trim().min(2).max(120),
   email: z.email(),
   company: z.string().trim().min(2).max(180),
-  services: z.string().min(2).max(500),
-  website: z.string().max(500).optional(),
+  services: z.string().trim().min(2).max(500),
+  role: z.string().max(120).optional(),
+  target_type: z
+    .enum(['', 'Web', 'API', 'Mobile', 'Cloud', 'Network', 'Code', 'Multiple', 'Unsure'])
+    .optional(),
+  authenticated: z.enum(['', 'Yes', 'No', 'Unsure']).optional(),
+  environment_type: z.enum(['', 'Production', 'Staging', 'Both', 'Unsure']).optional(),
+  retest: z.enum(['', 'Yes', 'No', 'Discuss during scoping']).optional(),
+  website: z
+    .string()
+    .max(500)
+    .refine((v) => !v || safeUrl(v, false), 'Use an absolute web URL.')
+    .optional(),
   environment: z.string().max(3000).optional(),
   timeline: z.string().max(200).optional(),
   compliance: z.string().max(500).optional(),

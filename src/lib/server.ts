@@ -106,7 +106,9 @@ export async function demoChange<T>(fn: (data: Record<string, RecordData[]>) => 
 }
 const table = (module: string) => (module === 'activity' ? 'audit_logs' : 'records');
 function ordered(module: string, rows: RecordData[]) {
-  return ['services', 'faqs', 'team', 'navigation'].includes(module)
+  return ['services', 'faqs', 'team', 'navigation', 'service_categories', 'industries'].includes(
+    module
+  )
     ? rows.sort((a, b) => Number(a.data.order || 0) - Number(b.data.order || 0))
     : rows;
 }
@@ -140,7 +142,10 @@ export function publicVisible(module: string, r: RecordData) {
     (module === 'jobs'
       ? ['open', 'paused', 'closed'].includes(r.status)
       : r.status === 'published') &&
-    (module !== 'research' || r.data.disclosure === 'public')
+    (module !== 'research' || r.data.disclosure === 'public') &&
+    (module !== 'case_studies' || r.data.visibility === 'public') &&
+    (module !== 'services' ||
+      ['summary', 'description', 'testing_areas'].every((k) => String(r.data[k] || '').trim()))
   );
 }
 export async function getRecord(module: string, id: string, publicOnly = false) {
@@ -173,14 +178,14 @@ export async function dashboardCounts() {
     drafts: number;
   };
 }
-export async function siteSettings() {
+export const siteSettings = cache(async () => {
   if (isDemo) return (await listRecords('settings', true))[0]?.data || {};
   if (!configured) return {};
   const db = await supabase();
   const { data, error } = await db.rpc('public_site_settings');
   if (error) throw new Error('Unable to load company settings. Apply the database migrations.');
   return (data || {}) as Record<string, any>;
-}
+});
 export async function internalEmailTemplates() {
   if (isDemo) return (await listRecords('settings', true))[0]?.data || {};
   const { data, error } = await privileged()
