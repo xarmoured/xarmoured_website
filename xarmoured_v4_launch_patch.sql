@@ -411,6 +411,7 @@ web-application-penetration-testing',
 on conflict (module, slug) do update set title=excluded.title, status='published',
   data=coalesce(public.records.data,'{}'::jsonb)||excluded.data, updated_at=now(), published_at=coalesce(public.records.published_at,now());
 
+
 -- Public company details (only fields on the public allow-list are exposed)
 update public.records set data=coalesce(data,'{}'::jsonb)||'{"company":"Xarmoured","country":"India","sales_email":"hello@xarmoured.tech","security_email":"hello@xarmoured.tech","linkedin":"https://www.linkedin.com/company/xarmoured","assessment_enabled":true,"remote":true}'::jsonb, updated_at=now() where module='settings' and slug='site';
 
