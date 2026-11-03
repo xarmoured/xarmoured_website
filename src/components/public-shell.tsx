@@ -117,6 +117,8 @@ export function PublicHeader({
     : [
         ...(settings.research_enabled !== false ? [{ label: 'Research', href: '/research' }] : []),
         { label: 'Approach', href: '/methodology' },
+        { label: 'Industries', href: '/industries' },
+        { label: 'Pricing', href: '/pricing' },
         { label: 'Resources', href: '/resources' },
         { label: 'Company', href: '/about' },
         ...(settings.careers_enabled !== false ? [{ label: 'Careers', href: '/careers' }] : []),
@@ -322,7 +324,12 @@ export function PublicFooter({
       <div>
         <span className="eyebrow">EXPLORE</span>
         {settings.research_enabled !== false && <Link href="/research">Research</Link>}
+        <Link href="/industries">Industries</Link>
+        <Link href="/pricing">Pricing &amp; scoping</Link>
+        <Link href="/how-we-work">How we work</Link>
+        <Link href="/deliverables">Deliverables</Link>
         <Link href="/resources">Resources</Link>
+        <Link href="/faq">FAQ</Link>
         {settings.sample_report_enabled !== false && (
           <Link href="/sample-report">Sample report</Link>
         )}
