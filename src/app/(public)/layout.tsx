@@ -42,14 +42,37 @@ export default async function PublicLayout({ children }: { children: React.React
           nonce={nonce}
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'Organization',
-              name: settings.company || 'Xarmoured',
-              url: seo.site_url,
-              ...(seo.organization ? { description: seo.organization } : {}),
-              ...(settings.sales_email ? { email: settings.sales_email } : {}),
-            }).replaceAll('<', '\\u003c'),
+            __html: JSON.stringify([
+              {
+                '@context': 'https://schema.org',
+                '@type': 'ProfessionalService',
+                '@id': `${seo.site_url.replace(/\/$/, '')}/#organization`,
+                name: settings.company || 'Xarmoured',
+                url: seo.site_url,
+                logo: `${seo.site_url.replace(/\/$/, '')}/logo.png`,
+                ...(seo.organization ? { description: seo.organization } : {}),
+                ...(settings.sales_email ? { email: settings.sales_email } : {}),
+                ...(settings.country
+                  ? { address: { '@type': 'PostalAddress', addressCountry: settings.country } }
+                  : {}),
+                knowsAbout: [
+                  'Web application penetration testing',
+                  'API security testing',
+                  'Android application security testing',
+                  'Remediation validation and retesting',
+                ],
+                sameAs: [settings.linkedin, settings.github, settings.twitter, settings.youtube].filter(
+                  Boolean
+                ),
+              },
+              {
+                '@context': 'https://schema.org',
+                '@type': 'WebSite',
+                name: settings.company || 'Xarmoured',
+                url: seo.site_url,
+                publisher: { '@id': `${seo.site_url.replace(/\/$/, '')}/#organization` },
+              },
+            ]).replaceAll('<', '\\u003c'),
           }}
         />
       )}

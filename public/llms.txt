@@ -1,0 +1,47 @@
+# Xarmoured
+
+> Xarmoured is an India-based, remote-first offensive security practice. It provides manual-first penetration testing for web applications, APIs and Android applications, with evidence-led reporting, remediation guidance and retesting to confirm fixes.
+
+Xarmoured does not publish invented clients, certifications, testimonials or results. Findings are validated manually and reported with reproducible evidence. To request a scoped assessment, use https://www.xarmoured.tech/assessment/.
+
+## Services
+- [Web Application Penetration Testing](https://www.xarmoured.tech/services/web-application-penetration-testing/): authentication, session handling, access control (IDOR), business logic and injection testing.
+- [API Security Testing](https://www.xarmoured.tech/services/api-security-testing/): BOLA/IDOR, function-level authorization, JWT and session flows, mass assignment and SSRF.
+- [Android Application Security Testing](https://www.xarmoured.tech/services/mobile-application-security-testing/): APK analysis, exported components, local storage, traffic handling and backend API trust boundaries.
+- [Retesting and Remediation Validation](https://www.xarmoured.tech/services/retesting-remediation-validation/): re-running original attack paths to confirm a fix works.
+
+## Company and process
+- [About Xarmoured](https://www.xarmoured.tech/about/)
+- [Methodology](https://www.xarmoured.tech/methodology/): scope, map, test, validate, report, remediate, retest.
+- [How we work](https://www.xarmoured.tech/how-we-work/)
+- [Deliverables](https://www.xarmoured.tech/deliverables/): what a report and retest contain.
+- [Pricing and scoping](https://www.xarmoured.tech/pricing/): what changes the quote.
+- [FAQ](https://www.xarmoured.tech/faq/)
+- [Request an assessment](https://www.xarmoured.tech/assessment/)
+
+## Industries
+- [SaaS security testing](https://www.xarmoured.tech/industries/saas/)
+- [E-commerce security testing](https://www.xarmoured.tech/industries/ecommerce/)
+- [Startup security testing](https://www.xarmoured.tech/industries/startups/)
+
+## Guides and resources
+- [API Authorization Testing: BOLA, Roles and Tenant Boundaries](https://www.xarmoured.tech/resources/api-authorization-security/)
+- [How to Prepare Your Web App or API for a Penetration Test](https://www.xarmoured.tech/resources/prepare-for-penetration-test/)
+- [How to Evaluate a Penetration Testing Report](https://www.xarmoured.tech/resources/pentest-report-guide/)
+- [Security Retesting: How to Confirm a Vulnerability Is Fixed](https://www.xarmoured.tech/resources/security-retesting-guide/)
+- [Android Application Security Testing: What Should Be Covered?](https://www.xarmoured.tech/resources/android-security-testing-guide/)
+- [Penetration Test vs Vulnerability Scan: What Is the Difference?](https://www.xarmoured.tech/resources/pentest-vs-vulnerability-scan/)
+- [Web Application Security Checklist for Product Teams](https://www.xarmoured.tech/resources/web-application-security-checklist/)
+- [IDOR vs BOLA: Object-Level Authorization Explained](https://www.xarmoured.tech/resources/idor-vs-bola-explained/)
+
+## Security research (public CVE disclosures)
+- [UnoPim: Arbitrary file upload leading to code execution (CVE-2026-82524)](https://www.xarmoured.tech/research/unopim-unrestricted-file-upload-rce-cve-2026-82524/)
+- [Invoice Ninja: Authorization bypass (CVE-2026-83743)](https://www.xarmoured.tech/research/invoice-ninja-vendor-portal-idor-cve-2026-83743/)
+- [Invoice Ninja: Server-side request forgery (CVE-2026-83744)](https://www.xarmoured.tech/research/invoice-ninja-ssrf-cve-2026-83744/)
+- [BookStack: Improper access control on attachments (CVE-2026-86285)](https://www.xarmoured.tech/research/bookstack-attachment-access-control-cve-2026-86285/)
+- [Cachet: Stored cross-site scripting in incidents (CVE-2026-113712)](https://www.xarmoured.tech/research/cachet-stored-xss-research/)
+
+## Optional
+- [Research index](https://www.xarmoured.tech/research/)
+- [Resources index](https://www.xarmoured.tech/resources/)
+- [Sitemap](https://www.xarmoured.tech/sitemap.xml)
