@@ -84,6 +84,11 @@ export const modules: Record<string, Module> = {
       f('content', 'Research content', 'markdown', 'Content'),
       f('category', 'Research type', 'select', 'Overview', [
         'Vulnerability Research',
+        'CVE Disclosures',
+        'Security Advisories',
+        'AI Security Research',
+        'Technical Publications',
+        'Open Source Tools',
         'Advisories',
         'Write-ups',
         'Techniques',
@@ -137,6 +142,9 @@ export const modules: Record<string, Module> = {
       f('description', 'Hero description', 'markdown'),
       f('category', 'Service category', 'select', 'Overview', [
         'Offensive Security',
+        'Application Security Engineering',
+        'AI Security',
+        'Security Automation',
         'Security Engineering',
         'Continuous Assurance',
       ]),
@@ -320,7 +328,7 @@ export const modules: Record<string, Module> = {
     statuses: ['published', 'inactive'],
     fields: [
       f('destination', 'Destination', 'url'),
-      f('placement', 'Placement', 'select', 'Overview', ['header', 'footer']),
+      f('placement', 'Placement', 'select', 'Overview', ['header', 'footer', 'platform', 'resources', 'company']),
       f('external', 'External link', 'checkbox'),
       f('order', 'Display order', 'number'),
     ],

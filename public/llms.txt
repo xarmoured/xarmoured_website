@@ -1,6 +1,6 @@
 # Xarmoured
 
-> Xarmoured is an India-based, remote-first offensive security practice. It provides manual-first penetration testing for web applications, APIs and Android applications, with evidence-led reporting, remediation guidance and retesting to confirm fixes.
+> Xarmoured ("Think like an attacker. Engineer for resilience.") is an independent, engineering-driven cybersecurity company, India-based and remote-first. It researches attack techniques, assesses real-world security weaknesses, engineers practical security improvements, and is developing software to help organizations understand and manage their security posture (in development, not yet available). Its assessment practice provides manual-first penetration testing for web applications, APIs and Android applications, with evidence-led reporting, remediation guidance and retesting to confirm fixes.
 
 Xarmoured does not publish invented clients, certifications, testimonials or results. Findings are validated manually and reported with reproducible evidence. To request a scoped assessment, use https://www.xarmoured.tech/assessment/.
 

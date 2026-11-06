@@ -181,7 +181,7 @@ export function SubmissionForm({
               aria-describedby={errors.services ? 'error-services' : undefined}
             >
               <option value="">Select a service</option>
-              {[...services, 'Retest an existing finding', 'Discuss scope'].map((s) => (
+              {[...services, 'Talk to an engineer', 'ExploitLedger demo request', 'Partnership enquiry', 'AI security assessment (emerging)', 'Retest an existing finding', 'Discuss scope'].map((s) => (
                 <option key={s}>{s}</option>
               ))}
             </select>

@@ -56,6 +56,8 @@ export default async function PublicLayout({ children }: { children: React.React
                   ? { address: { '@type': 'PostalAddress', addressCountry: settings.country } }
                   : {}),
                 knowsAbout: [
+                  'Attack technique research',
+                  'Security engineering',
                   'Web application penetration testing',
                   'API security testing',
                   'Android application security testing',

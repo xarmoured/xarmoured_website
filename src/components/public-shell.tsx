@@ -56,7 +56,11 @@ export function PublicHeader({
 }) {
   const [ready, setReady] = useState(false);
   const [menu, setMenu] = useState(false);
-  const [mega, setMega] = useState(false);
+  const [open, setOpen] = useState<string | null>(null);
+  const mega = open !== null;
+  const setMega = (v: boolean) => {
+    if (!v) setOpen(null);
+  };
   const dialog = useRef<HTMLDialogElement>(null);
   const desktop = useRef<HTMLDivElement>(null);
   const serviceButton = useRef<HTMLButtonElement>(null);
@@ -116,13 +120,50 @@ export function PublicHeader({
     ? custom.map((r) => ({ label: r.title, href: r.data.destination }))
     : [
         ...(settings.research_enabled !== false ? [{ label: 'Research', href: '/research' }] : []),
-        { label: 'Approach', href: '/methodology' },
-        { label: 'Industries', href: '/industries' },
-        { label: 'Pricing', href: '/pricing' },
-        { label: 'Resources', href: '/resources' },
-        { label: 'Company', href: '/about' },
+        { label: 'Solutions', href: '/solutions' },
         ...(settings.careers_enabled !== false ? [{ label: 'Careers', href: '/careers' }] : []),
       ];
+  /* Dropdown menus are CMS-controlled: Navigation records with placement platform, resources or
+     company replace the defaults. Custom header records keep the original flat navigation. */
+  const fromCms = (place: string, fallback: { label: string; href: string }[]) => {
+    const rows = links
+      .filter((r) => r.data.placement === place)
+      .sort((x, y) => (x.data.order || 0) - (y.data.order || 0));
+    return rows.length ? rows.map((r) => ({ label: r.title, href: r.data.destination })) : fallback;
+  };
+  const menus: Record<string, { title: string; links: { label: string; href: string }[] }> = {
+    platform: {
+      title: 'Platform',
+      links: fromCms('platform', [
+        { label: 'ExploitLedger overview', href: '/platform' },
+        { label: 'Features', href: '/exploitledger-features' },
+        { label: 'Workflow', href: '/exploitledger-workflow' },
+        { label: 'Architecture', href: '/exploitledger-architecture' },
+        { label: 'Request a demo', href: '/assessment' },
+      ]),
+    },
+    resources: {
+      title: 'Resources',
+      links: fromCms('resources', [
+        { label: 'Guides and articles', href: '/resources' },
+        { label: 'Research', href: '/research' },
+        { label: 'Methodology', href: '/methodology' },
+        { label: 'Sample report', href: '/sample-report' },
+        { label: 'FAQ', href: '/faq' },
+      ]),
+    },
+    company: {
+      title: 'Company',
+      links: fromCms('company', [
+        { label: 'About Xarmoured', href: '/about' },
+        { label: 'Engineering philosophy', href: '/engineering-philosophy' },
+        { label: 'Research approach', href: '/research-approach' },
+        { label: 'Partnerships', href: '/partnerships' },
+        { label: 'Contact', href: '/contact' },
+      ]),
+    },
+  };
+  const menuKeys = custom.length ? [] : Object.keys(menus);
   const groups = [...new Set(services.map((s) => s.data.category || 'Offensive Security'))].sort(
     (a, b) =>
       Number(categories.find((c) => c.title === a)?.data.order || 0) -
@@ -170,11 +211,24 @@ export function PublicHeader({
             <button
               ref={serviceButton}
               disabled={!ready}
-              aria-expanded={mega}
+              aria-expanded={open === 'services'}
               aria-controls="xa-services-menu"
-              onClick={() => setMega(!mega)}
+              aria-haspopup="true"
+              onClick={() => setOpen(open === 'services' ? null : 'services')}
             >
-              Services <ChevronDown size={13} aria-hidden="true" />
+                  {menuKeys.map((k) => (
+              <button
+                key={k}
+                disabled={!ready}
+                aria-haspopup="true"
+                aria-expanded={open === k}
+                aria-controls={`xa-menu-${k}`}
+                onClick={() => setOpen(open === k ? null : k)}
+              >
+                {menus[k].title} <ChevronDown size={13} aria-hidden="true" />
+              </button>
+            ))}
+        Services <ChevronDown size={13} aria-hidden="true" />
             </button>
             {nav
               .filter((n) => n.href !== '/services')
@@ -188,14 +242,14 @@ export function PublicHeader({
                 </Link>
               ))}
           </nav>
-          {mega && (
+          {open === 'services' && (
             <div id="xa-services-menu" className="xa-mega-menu">
               <div className="xa-mega-intro">
-                <span className="eyebrow">THE PRACTICE</span>
+                <span className="eyebrow">Assessment and engineering</span>
                 <h2>
-                  Test the boundary.
+                  Think like an attacker.
                   <br />
-                  Understand the risk.
+                  Engineer for resilience.
                 </h2>
                 <Link className="text-link" href="/services" onClick={() => setMega(false)}>
                   All services <ArrowUpRight size={16} aria-hidden="true" />
@@ -215,11 +269,24 @@ export function PublicHeader({
               )}
             </div>
           )}
+          {open && open !== 'services' && menus[open] && (
+            <div id={`xa-menu-${open}`} className="xa-mega-menu xa-simple-menu">
+              <div className="xa-mega-group">
+                <span className="eyebrow">{menus[open].title}</span>
+                {menus[open].links.map((l) => (
+                  <Link key={l.href + l.label} href={l.href} onClick={() => setMega(false)}>
+                    {l.label}
+                    <ArrowUpRight size={14} aria-hidden="true" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <div className="xa-nav-actions">
           <ThemeControl />
           <Link className="nav-contact" href="/assessment">
-            <span className="cta-label">{settings.sales_cta || 'Request an assessment'}</span>
+            <span className="cta-label">Talk to an Engineer</span>
             <ArrowUpRight size={15} aria-hidden="true" />
           </Link>
           <button
@@ -273,6 +340,18 @@ export function PublicHeader({
             </Link>
             {serviceLinks}
           </details>
+          {menuKeys.map((k) => (
+            <details key={k}>
+              <summary>
+                {menus[k].title} <ChevronDown size={18} aria-hidden="true" />
+              </summary>
+              {menus[k].links.map((l) => (
+                <Link key={l.href + l.label} href={l.href} onClick={() => setMenu(false)}>
+                  {l.label}
+                </Link>
+              ))}
+            </details>
+          ))}
           {nav
             .filter((n) => n.href !== '/services')
             .map((n) => (
@@ -281,12 +360,14 @@ export function PublicHeader({
                 <ArrowUpRight size={18} aria-hidden="true" />
               </Link>
             ))}
-          <Link href="/contact" onClick={() => setMenu(false)}>
-            Contact
-          </Link>
+          {!menuKeys.length && (
+            <Link href="/contact" onClick={() => setMenu(false)}>
+              Contact
+            </Link>
+          )}
         </nav>
         <Link className="button" href="/assessment" onClick={() => setMenu(false)}>
-          Request an assessment <ArrowUpRight size={18} aria-hidden="true" />
+          Talk to an Engineer <ArrowUpRight size={18} aria-hidden="true" />
         </Link>
       </dialog>
     </header>
@@ -306,10 +387,11 @@ export function PublicFooter({
       <div className="xa-footer-brand">
         <Brand />
         <p>
-          Offensive Security &<br />
-          Security Engineering
+          Think like an attacker.
+          <br />
+          Engineer for resilience.
         </p>
-        <span className="mono">FIND / UNDERSTAND / FIX / VERIFY</span>
+        <span className="mono">Independent cybersecurity engineering</span>
       </div>
       <div>
         <span className="eyebrow">SERVICES</span>
@@ -323,6 +405,8 @@ export function PublicFooter({
       </div>
       <div>
         <span className="eyebrow">EXPLORE</span>
+        <Link href="/platform">ExploitLedger (in development)</Link>
+        <Link href="/solutions">Solutions</Link>
         {settings.research_enabled !== false && <Link href="/research">Research</Link>}
         <Link href="/industries">Industries</Link>
         <Link href="/pricing">Pricing &amp; scoping</Link>
@@ -333,7 +417,10 @@ export function PublicFooter({
         {settings.sample_report_enabled !== false && (
           <Link href="/sample-report">Sample report</Link>
         )}
-        <Link href="/about">Company</Link>
+        <Link href="/about">About</Link>
+        <Link href="/engineering-philosophy">Engineering philosophy</Link>
+        <Link href="/research-approach">Research approach</Link>
+        <Link href="/partnerships">Partnerships</Link>
         {settings.careers_enabled !== false && <Link href="/careers">Careers</Link>}
         {links
           .filter((r) => r.data.placement === 'footer')
@@ -368,7 +455,7 @@ export function PublicFooter({
         <Link href="/privacy">Privacy</Link>
         <Link href="/terms">Terms</Link>
         <span className="xa-footer-signal">
-          <i /> Evidence over assumptions.
+          <i /> Research. Assess. Engineer. Build.
         </span>
       </div>
     </footer>

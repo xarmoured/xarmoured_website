@@ -18,11 +18,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   };
   [
     '/',
+    '/platform',
+    '/solutions',
     '/services',
     '/methodology',
     '/about',
     '/resources',
     '/assessment',
+    '/contact',
     '/privacy',
     '/terms',
     '/security',

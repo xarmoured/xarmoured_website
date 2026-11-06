@@ -88,7 +88,6 @@ export default async function PublicPage({
     (section === 'sample-report' && slug && query.preview !== 'true')
   )
     notFound();
-  if (section === 'contact') redirect('/assessment');
   const previewPage =
     query.preview === 'true' &&
     ![
@@ -116,14 +115,16 @@ export default async function PublicPage({
       <p>{description}</p>
     </Reveal>
   );
-  if (section === 'assessment')
+  if (section === 'assessment' || section === 'contact')
     return (
       <div className="wrap section form-page">
         <div>
           {intro(
-            'LET’S TALK SECURITY',
-            'Your next step toward certainty.',
-            'Tell us what you’re building and what you need tested. A practitioner will help you find the right scope.'
+            section === 'contact' ? 'CONTACT' : 'LET’S TALK SECURITY',
+            section === 'contact' ? 'Talk to an engineer.' : 'Your next step toward certainty.',
+            section === 'contact'
+              ? 'Choose a topic in the form: an assessment, an ExploitLedger demo, a partnership or a general question. An engineer replies.'
+              : 'Tell us what you’re building and what you need tested. A practitioner will help you find the right scope.'
           )}
           <div className="form-trust">
             <ShieldCheck />
