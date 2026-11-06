@@ -11,6 +11,7 @@ export function SubmissionForm({
   role = '',
   demo = false,
   services = [],
+  defaultService = '',
   nonce,
 }: {
   type: 'assessment' | 'application';
@@ -18,6 +19,7 @@ export function SubmissionForm({
   role?: string;
   demo?: boolean;
   services?: string[];
+  defaultService?: string;
   nonce?: string;
 }) {
   const [result, setResult] = useState<any>(null);
@@ -31,7 +33,7 @@ export function SubmissionForm({
     formState: { errors, isSubmitting },
   } = useForm<any>({
     resolver: zodResolver(type === 'assessment' ? leadSchema : applicationSchema),
-    defaultValues: { job_id: jobId },
+    defaultValues: { job_id: jobId, services: defaultService },
   });
   const started = useRef(false);
   function trackStart() {
@@ -173,7 +175,7 @@ export function SubmissionForm({
       {type === 'assessment' ? (
         <>
           <label>
-            What would you like tested? <span className="accent">*</span>
+            What would you like tested or discussed? <span className="accent">*</span>
             <select
               {...register('services')}
               id="field-services"
@@ -181,7 +183,13 @@ export function SubmissionForm({
               aria-describedby={errors.services ? 'error-services' : undefined}
             >
               <option value="">Select a service</option>
-              {[...services, 'Talk to an engineer', 'ExploitLedger demo request', 'Partnership enquiry', 'AI security assessment (emerging)', 'Retest an existing finding', 'Discuss scope'].map((s) => (
+              {[
+                ...services,
+                'Retest an existing finding',
+                'Discuss scope',
+                'Discuss Protocol',
+                'Partnership or research collaboration',
+              ].map((s) => (
                 <option key={s}>{s}</option>
               ))}
             </select>

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 test('boundary states, lifecycle and report anatomy are operable', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Think like an attacker');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Engineering security');
   await page.getByRole('button', { name: '04 Verified', exact: true }).click();
   await expect(page.getByText('The original path no longer holds.', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: '07 Retest', exact: true }).click();

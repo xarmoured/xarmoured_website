@@ -56,11 +56,7 @@ export function PublicHeader({
 }) {
   const [ready, setReady] = useState(false);
   const [menu, setMenu] = useState(false);
-  const [open, setOpen] = useState<string | null>(null);
-  const mega = open !== null;
-  const setMega = (v: boolean) => {
-    if (!v) setOpen(null);
-  };
+  const [mega, setMega] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const desktop = useRef<HTMLDivElement>(null);
   const serviceButton = useRef<HTMLButtonElement>(null);
@@ -119,51 +115,13 @@ export function PublicHeader({
   const nav = custom.length
     ? custom.map((r) => ({ label: r.title, href: r.data.destination }))
     : [
+        { label: 'Solutions', href: '/industries' },
+        { label: 'Protocol', href: '/protocol' },
         ...(settings.research_enabled !== false ? [{ label: 'Research', href: '/research' }] : []),
-        { label: 'Solutions', href: '/solutions' },
-        ...(settings.careers_enabled !== false ? [{ label: 'Careers', href: '/careers' }] : []),
+        { label: 'Approach', href: '/methodology' },
+        { label: 'Partners', href: '/partners' },
+        { label: 'Company', href: '/about' },
       ];
-  /* Dropdown menus are CMS-controlled: Navigation records with placement platform, resources or
-     company replace the defaults. Custom header records keep the original flat navigation. */
-  const fromCms = (place: string, fallback: { label: string; href: string }[]) => {
-    const rows = links
-      .filter((r) => r.data.placement === place)
-      .sort((x, y) => (x.data.order || 0) - (y.data.order || 0));
-    return rows.length ? rows.map((r) => ({ label: r.title, href: r.data.destination })) : fallback;
-  };
-  const menus: Record<string, { title: string; links: { label: string; href: string }[] }> = {
-    platform: {
-      title: 'Platform',
-      links: fromCms('platform', [
-        { label: 'ExploitLedger overview', href: '/platform' },
-        { label: 'Features', href: '/exploitledger-features' },
-        { label: 'Workflow', href: '/exploitledger-workflow' },
-        { label: 'Architecture', href: '/exploitledger-architecture' },
-        { label: 'Request a demo', href: '/assessment' },
-      ]),
-    },
-    resources: {
-      title: 'Resources',
-      links: fromCms('resources', [
-        { label: 'Guides and articles', href: '/resources' },
-        { label: 'Research', href: '/research' },
-        { label: 'Methodology', href: '/methodology' },
-        { label: 'Sample report', href: '/sample-report' },
-        { label: 'FAQ', href: '/faq' },
-      ]),
-    },
-    company: {
-      title: 'Company',
-      links: fromCms('company', [
-        { label: 'About Xarmoured', href: '/about' },
-        { label: 'Engineering philosophy', href: '/engineering-philosophy' },
-        { label: 'Research approach', href: '/research-approach' },
-        { label: 'Partnerships', href: '/partnerships' },
-        { label: 'Contact', href: '/contact' },
-      ]),
-    },
-  };
-  const menuKeys = custom.length ? [] : Object.keys(menus);
   const groups = [...new Set(services.map((s) => s.data.category || 'Offensive Security'))].sort(
     (a, b) =>
       Number(categories.find((c) => c.title === a)?.data.order || 0) -
@@ -211,24 +169,11 @@ export function PublicHeader({
             <button
               ref={serviceButton}
               disabled={!ready}
-              aria-expanded={open === 'services'}
+              aria-expanded={mega}
               aria-controls="xa-services-menu"
-              aria-haspopup="true"
-              onClick={() => setOpen(open === 'services' ? null : 'services')}
+              onClick={() => setMega(!mega)}
             >
-                  {menuKeys.map((k) => (
-              <button
-                key={k}
-                disabled={!ready}
-                aria-haspopup="true"
-                aria-expanded={open === k}
-                aria-controls={`xa-menu-${k}`}
-                onClick={() => setOpen(open === k ? null : k)}
-              >
-                {menus[k].title} <ChevronDown size={13} aria-hidden="true" />
-              </button>
-            ))}
-        Services <ChevronDown size={13} aria-hidden="true" />
+              Services <ChevronDown size={13} aria-hidden="true" />
             </button>
             {nav
               .filter((n) => n.href !== '/services')
@@ -242,14 +187,14 @@ export function PublicHeader({
                 </Link>
               ))}
           </nav>
-          {open === 'services' && (
+          {mega && (
             <div id="xa-services-menu" className="xa-mega-menu">
               <div className="xa-mega-intro">
-                <span className="eyebrow">Assessment and engineering</span>
+                <span className="eyebrow">THE PRACTICE</span>
                 <h2>
-                  Think like an attacker.
+                  Test the boundary.
                   <br />
-                  Engineer for resilience.
+                  Understand the risk.
                 </h2>
                 <Link className="text-link" href="/services" onClick={() => setMega(false)}>
                   All services <ArrowUpRight size={16} aria-hidden="true" />
@@ -267,19 +212,6 @@ export function PublicHeader({
                   <Link href="/assessment">Request an assessment →</Link>
                 </div>
               )}
-            </div>
-          )}
-          {open && open !== 'services' && menus[open] && (
-            <div id={`xa-menu-${open}`} className="xa-mega-menu xa-simple-menu">
-              <div className="xa-mega-group">
-                <span className="eyebrow">{menus[open].title}</span>
-                {menus[open].links.map((l) => (
-                  <Link key={l.href + l.label} href={l.href} onClick={() => setMega(false)}>
-                    {l.label}
-                    <ArrowUpRight size={14} aria-hidden="true" />
-                  </Link>
-                ))}
-              </div>
             </div>
           )}
         </div>
@@ -340,18 +272,6 @@ export function PublicHeader({
             </Link>
             {serviceLinks}
           </details>
-          {menuKeys.map((k) => (
-            <details key={k}>
-              <summary>
-                {menus[k].title} <ChevronDown size={18} aria-hidden="true" />
-              </summary>
-              {menus[k].links.map((l) => (
-                <Link key={l.href + l.label} href={l.href} onClick={() => setMenu(false)}>
-                  {l.label}
-                </Link>
-              ))}
-            </details>
-          ))}
           {nav
             .filter((n) => n.href !== '/services')
             .map((n) => (
@@ -360,11 +280,9 @@ export function PublicHeader({
                 <ArrowUpRight size={18} aria-hidden="true" />
               </Link>
             ))}
-          {!menuKeys.length && (
-            <Link href="/contact" onClick={() => setMenu(false)}>
-              Contact
-            </Link>
-          )}
+          <Link href="/contact" onClick={() => setMenu(false)}>
+            Contact
+          </Link>
         </nav>
         <Link className="button" href="/assessment" onClick={() => setMenu(false)}>
           Talk to an Engineer <ArrowUpRight size={18} aria-hidden="true" />
@@ -387,11 +305,11 @@ export function PublicFooter({
       <div className="xa-footer-brand">
         <Brand />
         <p>
-          Think like an attacker.
+          Cybersecurity engineering.
           <br />
-          Engineer for resilience.
+          Offense, defense and research.
         </p>
-        <span className="mono">Independent cybersecurity engineering</span>
+        <span className="mono">FIND / UNDERSTAND / FIX / VERIFY</span>
       </div>
       <div>
         <span className="eyebrow">SERVICES</span>
@@ -405,10 +323,10 @@ export function PublicFooter({
       </div>
       <div>
         <span className="eyebrow">EXPLORE</span>
-        <Link href="/platform">ExploitLedger (in development)</Link>
-        <Link href="/solutions">Solutions</Link>
+        <Link href="/protocol">Protocol</Link>
         {settings.research_enabled !== false && <Link href="/research">Research</Link>}
-        <Link href="/industries">Industries</Link>
+        <Link href="/industries">Solutions</Link>
+        <Link href="/partners">Partners</Link>
         <Link href="/pricing">Pricing &amp; scoping</Link>
         <Link href="/how-we-work">How we work</Link>
         <Link href="/deliverables">Deliverables</Link>
@@ -417,10 +335,7 @@ export function PublicFooter({
         {settings.sample_report_enabled !== false && (
           <Link href="/sample-report">Sample report</Link>
         )}
-        <Link href="/about">About</Link>
-        <Link href="/engineering-philosophy">Engineering philosophy</Link>
-        <Link href="/research-approach">Research approach</Link>
-        <Link href="/partnerships">Partnerships</Link>
+        <Link href="/about">Company</Link>
         {settings.careers_enabled !== false && <Link href="/careers">Careers</Link>}
         {links
           .filter((r) => r.data.placement === 'footer')
@@ -455,7 +370,7 @@ export function PublicFooter({
         <Link href="/privacy">Privacy</Link>
         <Link href="/terms">Terms</Link>
         <span className="xa-footer-signal">
-          <i /> Research. Assess. Engineer. Build.
+          <i /> Evidence over assumptions.
         </span>
       </div>
     </footer>

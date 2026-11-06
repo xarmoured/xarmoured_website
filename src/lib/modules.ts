@@ -84,11 +84,6 @@ export const modules: Record<string, Module> = {
       f('content', 'Research content', 'markdown', 'Content'),
       f('category', 'Research type', 'select', 'Overview', [
         'Vulnerability Research',
-        'CVE Disclosures',
-        'Security Advisories',
-        'AI Security Research',
-        'Technical Publications',
-        'Open Source Tools',
         'Advisories',
         'Write-ups',
         'Techniques',
@@ -128,6 +123,12 @@ export const modules: Record<string, Module> = {
       f('disclosed_at', 'Disclosure date', 'date', 'Disclosure'),
       f('references', 'References (one URL per line)', 'textarea', 'Content'),
       f('researcher', 'Researcher attribution', undefined, 'Content'),
+      f(
+        'attribution_verified',
+        'Attribution verified against the public advisory',
+        'checkbox',
+        'Disclosure'
+      ),
       ...seo,
     ],
   },
@@ -142,9 +143,6 @@ export const modules: Record<string, Module> = {
       f('description', 'Hero description', 'markdown'),
       f('category', 'Service category', 'select', 'Overview', [
         'Offensive Security',
-        'Application Security Engineering',
-        'AI Security',
-        'Security Automation',
         'Security Engineering',
         'Continuous Assurance',
       ]),
@@ -206,8 +204,11 @@ export const modules: Record<string, Module> = {
       f('show_careers', 'Show careers callout', 'checkbox', 'Sections'),
       f('show_labs', 'Show Labs', 'checkbox', 'Sections'),
       ...[
+        'who',
         'problem',
         'services',
+        'defensive',
+        'protocol',
         'lifecycle',
         'principles',
         'case_studies',
@@ -328,7 +329,7 @@ export const modules: Record<string, Module> = {
     statuses: ['published', 'inactive'],
     fields: [
       f('destination', 'Destination', 'url'),
-      f('placement', 'Placement', 'select', 'Overview', ['header', 'footer', 'platform', 'resources', 'company']),
+      f('placement', 'Placement', 'select', 'Overview', ['header', 'footer']),
       f('external', 'External link', 'checkbox'),
       f('order', 'Display order', 'number'),
     ],

@@ -190,7 +190,7 @@ export function PublicationList({
   const categories = [
     ...new Set([
       ...(section === 'research'
-        ? ['Vulnerability Research', 'CVE Disclosures', 'Security Advisories', 'AI Security Research', 'Technical Publications', 'Open Source Tools']
+        ? ['Vulnerability Research', 'Advisories', 'Write-ups', 'Techniques', 'Tools']
         : []),
       ...records.map(
         (r) =>

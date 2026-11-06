@@ -1,8 +1,8 @@
 # Xarmoured
 
-> Xarmoured ("Think like an attacker. Engineer for resilience.") is an independent, engineering-driven cybersecurity company, India-based and remote-first. It researches attack techniques, assesses real-world security weaknesses, engineers practical security improvements, and is developing software to help organizations understand and manage their security posture (in development, not yet available). Its assessment practice provides manual-first penetration testing for web applications, APIs and Android applications, with evidence-led reporting, remediation guidance and retesting to confirm fixes.
+> Xarmoured is an independent, founder-led cybersecurity engineering company based in India and working remotely. Its available services are manual-first penetration testing for web applications, APIs and Android applications, with evidence-led reporting, remediation guidance and retesting. Defensive engineering and a proprietary platform, Protocol, are in development and are not available as services or products.
 
-Xarmoured does not publish invented clients, certifications, testimonials or results. Findings are validated manually and reported with reproducible evidence. To request a scoped assessment, use https://www.xarmoured.tech/assessment/.
+Xarmoured does not publish invented clients, certifications, testimonials or results. It does not offer SOC, MDR, 24/7 monitoring, red teaming or infrastructure testing, and it does not operate a formal partner program. To request a scoped assessment, use https://www.xarmoured.tech/assessment/.
 
 ## Services
 - [Web Application Penetration Testing](https://www.xarmoured.tech/services/web-application-penetration-testing/): authentication, session handling, access control (IDOR), business logic and injection testing.
@@ -11,6 +11,8 @@ Xarmoured does not publish invented clients, certifications, testimonials or res
 - [Retesting and Remediation Validation](https://www.xarmoured.tech/services/retesting-remediation-validation/): re-running original attack paths to confirm a fix works.
 
 ## Company and process
+- [Protocol](https://www.xarmoured.tech/protocol/): the security engineering platform under development (not generally available).
+- [Partners and collaboration](https://www.xarmoured.tech/partners/): case-by-case collaboration; no formal partner program.
 - [About Xarmoured](https://www.xarmoured.tech/about/)
 - [Methodology](https://www.xarmoured.tech/methodology/): scope, map, test, validate, report, remediate, retest.
 - [How we work](https://www.xarmoured.tech/how-we-work/)
@@ -34,7 +36,7 @@ Xarmoured does not publish invented clients, certifications, testimonials or res
 - [Web Application Security Checklist for Product Teams](https://www.xarmoured.tech/resources/web-application-security-checklist/)
 - [IDOR vs BOLA: Object-Level Authorization Explained](https://www.xarmoured.tech/resources/idor-vs-bola-explained/)
 
-## Security research (public CVE disclosures)
+## Security research (public CVE disclosures; each entry shows researcher attribution where verified, and links the public advisory)
 - [UnoPim: Arbitrary file upload leading to code execution (CVE-2026-82524)](https://www.xarmoured.tech/research/unopim-unrestricted-file-upload-rce-cve-2026-82524/)
 - [Invoice Ninja: Authorization bypass (CVE-2026-83743)](https://www.xarmoured.tech/research/invoice-ninja-vendor-portal-idor-cve-2026-83743/)
 - [Invoice Ninja: Server-side request forgery (CVE-2026-83744)](https://www.xarmoured.tech/research/invoice-ninja-ssrf-cve-2026-83744/)

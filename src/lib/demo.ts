@@ -16,7 +16,8 @@ const row = (
 });
 export const initialSettings = row('site', 'Website settings', 'site', 'published', {
   company: 'Xarmoured',
-  description: 'Penetration testing and security engineering. Built by practitioners.',
+  description:
+    'Independent cybersecurity engineering: offensive security today, defensive engineering and the Protocol platform in development.',
   sales_email: 'contact@xarmoured.com',
   assessment_enabled: true,
   careers_enabled: true,
@@ -27,14 +28,14 @@ export const initialSettings = row('site', 'Website settings', 'site', 'publishe
   sales_cta: 'Request an assessment',
 });
 export const initialHome = row('home', 'Homepage', 'home', 'published', {
-  eyebrow: 'OFFENSIVE SECURITY & SECURITY ENGINEERING',
-  headline: 'Security that survives\ncontact with an attacker.',
+  eyebrow: 'OFFENSIVE SECURITY · DEFENSIVE ENGINEERING · RESEARCH',
+  headline: 'Engineering security\nfrom both sides of the attack.',
   summary:
-    'We trace real attack paths, demonstrate exploitable risk and help engineers verify the fix. Manual penetration testing and security engineering, grounded in evidence.',
-  primary_label: 'Request an assessment',
+    'Xarmoured is an independent, founder-led cybersecurity engineering company. We test web applications, APIs and Android apps today, and we are building defensive engineering and our own platform, Protocol, on the same evidence.',
+  primary_label: 'Request an Assessment',
   primary_url: '/assessment',
-  secondary_label: 'Explore our approach',
-  secondary_url: '/methodology',
+  secondary_label: 'Explore Protocol',
+  secondary_url: '/protocol',
   services_heading: 'Different systems.\nThe same depth of attention.',
   research_heading: 'Questions worth\nfollowing further.',
   final_cta: 'Put your security\nassumptions to the test.',

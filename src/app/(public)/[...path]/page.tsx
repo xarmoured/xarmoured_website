@@ -15,6 +15,9 @@ import { Markdown } from '@/components/markdown';
 import { SubmissionForm } from '@/components/submission-form';
 import { ProcessTimeline, ReportPreview, PublicationList } from '@/components/public-experiences';
 import { lifecycle } from '@/lib/lifecycle';
+import { enquiryTopics, researchAttribution } from '@/lib/capabilities';
+import { ProtocolPage, PartnersPage } from '@/components/company-pages';
+import { MaturityTag, AudiencePaths, DirectionList } from '@/components/protocol';
 import { Breadcrumbs, DetailSchema, pageMetadata } from '@/lib/seo';
 export async function generateMetadata({
   params,
@@ -52,11 +55,20 @@ export async function generateMetadata({
     security: 'Responsible disclosure',
     'sample-report': 'Sample report',
     'case-studies': 'Case studies',
+    protocol: 'Protocol (in development)',
+    partners: 'Partners and collaboration',
+    industries: 'Solutions',
+  };
+  const fallbackDescriptions: Record<string, string> = {
+    protocol:
+      'Protocol is the security engineering platform being developed by Xarmoured to connect offensive assessments, defensive validation and security intelligence. In development; not generally available.',
+    partners:
+      'Xarmoured is open to collaboration with security consultancies, MSSPs, vendors and researchers. There is no formal partner program; collaboration is discussed case by case.',
   };
   return pageMetadata(
     '/' + path.join('/'),
     r?.data.seo_title || r?.title || labels[path[0]] || path[0].replaceAll('-', ' '),
-    r?.data.seo_description || r?.data.summary,
+    r?.data.seo_description || r?.data.summary || fallbackDescriptions[path[0]],
     query.preview === 'true',
     r?.data.og_image
   );
@@ -88,6 +100,7 @@ export default async function PublicPage({
     (section === 'sample-report' && slug && query.preview !== 'true')
   )
     notFound();
+  if (section === 'contact') redirect('/assessment');
   const previewPage =
     query.preview === 'true' &&
     ![
@@ -115,15 +128,36 @@ export default async function PublicPage({
       <p>{description}</p>
     </Reveal>
   );
-  if (section === 'assessment' || section === 'contact')
+  if (section === 'protocol' || section === 'partners') {
+    const page = await getRecord('pages', section, !previewPage);
+    return section === 'protocol' ? (
+      <>
+        {previewBanner}
+        <ProtocolPage extra={page?.data.content} />
+      </>
+    ) : (
+      <>
+        {previewBanner}
+        <PartnersPage />
+      </>
+    );
+  }
+  if (section === 'assessment') {
+    const topic = String(query.topic || '');
+    const defaultService =
+      topic === 'protocol'
+        ? enquiryTopics.protocol
+        : topic === 'partnership'
+          ? enquiryTopics.partnership
+          : '';
     return (
       <div className="wrap section form-page">
         <div>
           {intro(
-            section === 'contact' ? 'CONTACT' : 'LET’S TALK SECURITY',
-            section === 'contact' ? 'Talk to an engineer.' : 'Your next step toward certainty.',
-            section === 'contact'
-              ? 'Choose a topic in the form: an assessment, an ExploitLedger demo, a partnership or a general question. An engineer replies.'
+            'LET’S TALK SECURITY',
+            defaultService ? 'Tell us what you have in mind.' : 'Your next step toward certainty.',
+            defaultService
+              ? 'Share who you are and what you would like to explore. A practitioner will reply personally.'
               : 'Tell us what you’re building and what you need tested. A practitioner will help you find the right scope.'
           )}
           <div className="form-trust">
@@ -152,11 +186,13 @@ export default async function PublicPage({
               demo={isDemo}
               nonce={nonce}
               services={(await listRecords('services', true)).map((r) => r.title)}
+              defaultService={defaultService}
             />
           )}
         </div>
       </div>
     );
+  }
   if (['resources', 'case-studies', 'industries'].includes(section)) {
     const module = section === 'case-studies' ? 'case_studies' : section;
     const rows = await listRecords(module, true);
@@ -232,15 +268,27 @@ export default async function PublicPage({
     return (
       <div className="wrap section">
         {intro(
-          section === 'resources' ? 'THE RESOURCE LIBRARY' : 'FROM THE PRACTICE',
+          section === 'resources'
+            ? 'THE RESOURCE LIBRARY'
+            : section === 'industries'
+              ? 'SOLUTIONS'
+              : 'FROM THE PRACTICE',
           section === 'resources'
             ? 'Knowledge you can\nput to work.'
             : section === 'case-studies'
               ? 'The work. The outcome.'
-              : 'Systems in context.',
+              : 'Security in your\nenvironment.',
           section === 'resources'
             ? 'Technical articles, guides and resources. Published when there is something useful to share.'
-            : 'Real contexts, clear scope and documented outcomes.'
+            : section === 'industries'
+              ? 'The problems we work on, and how to work with an independent, founder-led security engineering company, whether you build a product, run an enterprise or secure others.'
+              : 'Real contexts, clear scope and documented outcomes.'
+        )}
+        {section === 'industries' && (
+          <>
+            <AudiencePaths />
+            <h2 className="xa-solutions-heading">Application contexts we test</h2>
+          </>
         )}
         <h2 className="sr-only">Published entries</h2>
         <PublicationList records={rows} section={section} />
@@ -456,6 +504,9 @@ export default async function PublicPage({
                     )
                 )}
               </div>
+              {researchAttribution(r.data) && (
+                <p className="xa-attribution">{researchAttribution(r.data)}</p>
+              )}
               <Markdown>{r.data.content || ''}</Markdown>
               {r.data.disclosure_timeline && (
                 <section className="xa-service-section">
@@ -634,7 +685,7 @@ export default async function PublicPage({
           section === 'services'
             ? 'Manual-first offensive security, built around your systems and business context.'
             : section === 'research'
-              ? 'Original research, responsible disclosure, and the lessons that make systems stronger.'
+              ? 'Original research, responsible disclosure, and the lessons that make systems stronger. Each entry names the researcher and links the public advisory.'
               : 'An early-stage security company for practitioners who care about the details. No inflated titles. Just meaningful work.'
         )}
         <h2 className="sr-only">
@@ -658,6 +709,7 @@ export default async function PublicPage({
                 <div>
                   <h3>{r.title}</h3>
                   <p>{r.data.summary}</p>
+                  {section === 'services' && <MaturityTag maturity="available" />}
                   {section === 'careers' && (
                     <span className="mono">
                       {r.data.department} · {r.data.location} · {r.data.employment}
@@ -683,6 +735,17 @@ export default async function PublicPage({
                 : 'Discuss your assets, security objectives and testing boundaries with a practitioner. Published service details will appear here when enabled.'}
             </p>
           </div>
+        )}
+        {section === 'services' && (
+          <section className="xa-protocol-section">
+            <span className="eyebrow">WHERE WE’RE HEADING</span>
+            <h2>Beyond offensive testing.</h2>
+            <p>
+              The four services above are what Xarmoured delivers today. Defensive engineering and
+              Protocol are being built on the same evidence and are not available as services.
+            </p>
+            <DirectionList />
+          </section>
         )}
         {section === 'careers' && settings.general_applications && (
           <div className="general-application">
@@ -808,13 +871,13 @@ export default async function PublicPage({
       <div className="wrap section">
         {previewBanner}
         {intro(
-          'THE PRACTICE',
+          'THE COMPANY',
           page?.data.headline ||
             page?.title ||
-            'Built by practitioners.\nFor people building things.',
+            'Engineering security\nfrom both sides of the attack.',
           page?.data.summary ||
             settings.description ||
-            'Xarmoured is an early-stage security company focused on penetration testing, vulnerability research, and security engineering.'
+            'Xarmoured is an independent, founder-led cybersecurity engineering company building offensive and defensive security capability, research and a proprietary platform.'
         )}
         {page?.data.content && <Markdown>{page.data.content}</Markdown>}
         <div className="about-statement">
@@ -853,6 +916,15 @@ export default async function PublicPage({
             </div>
           ))}
         </div>
+        <section className="xa-protocol-section">
+          <span className="eyebrow">WHERE WE ARE AND WHERE WE’RE GOING</span>
+          <h2>Honest about what exists today.</h2>
+          <p>
+            Xarmoured is founder-led and growing. Offensive security is the foundation we deliver
+            today. Everything else on this list is labelled by how far along it is.
+          </p>
+          <DirectionList />
+        </section>
         {team.length > 0 && (
           <div className="team-grid">
             {team.map((r) => (

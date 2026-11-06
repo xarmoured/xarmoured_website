@@ -47,7 +47,7 @@ try {
   const signup = await fetch(base + '/admin/register', { redirect: 'manual' });
   assert([303, 307, 404].includes(signup.status));
   const home = await (await fetch(base)).text();
-  assert(home.includes('Think like an attacker'));
+  assert(home.includes('Security that survives'));
   assert(!home.includes('Web Application VAPT'));
   const csp = (await fetch(base)).headers.get('content-security-policy');
   assert(csp.includes("'nonce-"));
@@ -57,11 +57,10 @@ try {
   assert(!(await security.text()).includes('mailto:'));
   assert(!home.includes('DEVELOPMENT DEMO'));
   assert.equal((await fetch(base + '/security')).status, 200);
-  const contact = await fetch(base + '/contact');
-  assert.equal(contact.status, 200);
-  assert((await contact.text()).includes('Talk to an engineer'));
-  for (const route of ['/platform', '/solutions', '/exploitledger-features', '/engineering-philosophy', '/research-approach', '/partnerships'])
-    assert.equal((await fetch(base + route)).status, 200, route);
+  const contact = await fetch(base + '/contact', { redirect: 'manual' });
+  assert([200, 303, 307, 308].includes(contact.status));
+  if (contact.status === 200) assert((await contact.text()).includes('url=/assessment'));
+  else assert(contact.headers.get('location')?.endsWith('/assessment'));
   const robots = await (await fetch(base + '/robots.txt')).text();
   assert(robots.includes('/admin'));
   const sitemap = await (await fetch(base + '/sitemap.xml')).text();
@@ -82,9 +81,13 @@ try {
         if (m.type() === 'error') errors.push(m.text());
       });
       await page.goto(base + '/contact');
-      assert(await page.getByRole('heading', { name: 'Talk to an engineer.' }).isVisible());
+      await page.waitForURL(base + '/assessment');
       await page.goto(base);
       await page.getByRole('combobox', { name: 'Color theme' }).selectOption('dark');
+      await page.getByRole('button', { name: '04 Verified', exact: true }).click();
+      assert(
+        await page.getByText('The original path no longer holds.', { exact: true }).isVisible()
+      );
       await page.screenshot({
         path: 'test-results/production-home-dark-desktop.png',
         fullPage: true,
