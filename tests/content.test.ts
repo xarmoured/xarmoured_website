@@ -92,3 +92,25 @@ describe('security.txt configuration', () => {
     ).toContain('Policy: https://example.com/security');
   });
 });
+
+describe('capability registry and research attribution', () => {
+  it('labels every Protocol component conservatively until the repo is inspected', async () => {
+    const { protocolComponents } = await import('../src/lib/capabilities');
+    expect(protocolComponents.every((c) => c.maturity !== 'available')).toBe(true);
+    expect(protocolComponents.find((c) => c.name === 'Protocol Defend')?.maturity).toBe('planned');
+    expect(protocolComponents.find((c) => c.name === 'Protocol Intelligence')?.maturity).toBe(
+      'planned'
+    );
+  });
+  it('shows research attribution only when explicitly verified and named', async () => {
+    const { researchAttribution } = await import('../src/lib/capabilities');
+    expect(researchAttribution({ researcher: 'Ashutosh Jena' })).toBeNull();
+    expect(
+      researchAttribution({ attribution_verified: false, researcher: 'Ashutosh Jena' })
+    ).toBeNull();
+    expect(researchAttribution({ attribution_verified: true })).toBeNull();
+    expect(researchAttribution({ attribution_verified: true, researcher: 'Ashutosh Jena' })).toBe(
+      'Research by Ashutosh Jena, published through Xarmoured'
+    );
+  });
+});

@@ -150,7 +150,16 @@ export async function DetailSchema({
           url,
           datePublished: r.data.publication_date || r.published_at || r.created_at,
           dateModified: r.updated_at,
-          author: r.data.researcher ? { '@type': 'Person', name: r.data.researcher } : org,
+          // Research is never attributed to the company by default: a named author is
+          // emitted only when the attribution was verified against the public advisory.
+          author:
+            section === 'research'
+              ? r.data.researcher && r.data.attribution_verified === true
+                ? { '@type': 'Person', name: r.data.researcher }
+                : undefined
+              : r.data.researcher
+                ? { '@type': 'Person', name: r.data.researcher }
+                : org,
           publisher: org,
           ...(r.data.og_image ? { image: r.data.og_image } : {}),
         }}

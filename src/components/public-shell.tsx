@@ -115,13 +115,12 @@ export function PublicHeader({
   const nav = custom.length
     ? custom.map((r) => ({ label: r.title, href: r.data.destination }))
     : [
+        { label: 'Solutions', href: '/industries' },
+        { label: 'Protocol', href: '/protocol' },
         ...(settings.research_enabled !== false ? [{ label: 'Research', href: '/research' }] : []),
         { label: 'Approach', href: '/methodology' },
-        { label: 'Industries', href: '/industries' },
-        { label: 'Pricing', href: '/pricing' },
-        { label: 'Resources', href: '/resources' },
+        { label: 'Partners', href: '/partners' },
         { label: 'Company', href: '/about' },
-        ...(settings.careers_enabled !== false ? [{ label: 'Careers', href: '/careers' }] : []),
       ];
   const groups = [...new Set(services.map((s) => s.data.category || 'Offensive Security'))].sort(
     (a, b) =>
@@ -219,7 +218,7 @@ export function PublicHeader({
         <div className="xa-nav-actions">
           <ThemeControl />
           <Link className="nav-contact" href="/assessment">
-            <span className="cta-label">{settings.sales_cta || 'Request an assessment'}</span>
+            <span className="cta-label">Talk to an Engineer</span>
             <ArrowUpRight size={15} aria-hidden="true" />
           </Link>
           <button
@@ -286,7 +285,7 @@ export function PublicHeader({
           </Link>
         </nav>
         <Link className="button" href="/assessment" onClick={() => setMenu(false)}>
-          Request an assessment <ArrowUpRight size={18} aria-hidden="true" />
+          Talk to an Engineer <ArrowUpRight size={18} aria-hidden="true" />
         </Link>
       </dialog>
     </header>
@@ -306,8 +305,9 @@ export function PublicFooter({
       <div className="xa-footer-brand">
         <Brand />
         <p>
-          Offensive Security &<br />
-          Security Engineering
+          Cybersecurity engineering.
+          <br />
+          Offense, defense and research.
         </p>
         <span className="mono">FIND / UNDERSTAND / FIX / VERIFY</span>
       </div>
@@ -323,8 +323,10 @@ export function PublicFooter({
       </div>
       <div>
         <span className="eyebrow">EXPLORE</span>
+        <Link href="/protocol">Protocol</Link>
         {settings.research_enabled !== false && <Link href="/research">Research</Link>}
-        <Link href="/industries">Industries</Link>
+        <Link href="/industries">Solutions</Link>
+        <Link href="/partners">Partners</Link>
         <Link href="/pricing">Pricing &amp; scoping</Link>
         <Link href="/how-we-work">How we work</Link>
         <Link href="/deliverables">Deliverables</Link>

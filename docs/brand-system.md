@@ -1,6 +1,6 @@
 # Xarmoured brand system
 
-Positioning: Offensive Security & Security Engineering. Identify how systems fail, demonstrate exploitable risk, help engineers fix the cause and verify the boundary afterward. Never imply unstaffed capabilities, a proprietary platform or invented enterprise scale.
+Positioning: an independent, founder-led cybersecurity engineering company. Offensive security is the delivered foundation; defensive engineering and the proprietary platform Protocol are in development. Identify how systems fail, demonstrate exploitable risk, help engineers fix the cause, verify the boundary afterward and measure the improvement. Never imply unstaffed capabilities, invented enterprise scale, customers, certifications, partnerships or integrations. Protocol and any future capability may be described only with an explicit maturity label (AVAILABLE NOW, IN DEVELOPMENT, PLANNED) taken from `src/lib/capabilities.ts`; an item becomes AVAILABLE NOW only after the actual implementation has been inspected. Services available today: web application, API and Android penetration testing and retesting. SOC, MDR, 24/7 monitoring, red teaming and infrastructure testing are not offered. There is no formal partner program. Research is attributed to the researcher ("Research by <name>, published through Xarmoured") only when verified against the public advisory; never imply company ownership of a discovery.
 
 Voice: precise, calm, evidence-focused, human. Prefer “Test the assumption. Trace the impact.” over “Industry-leading protection.” Describe scope and limitations. No fearmongering, fake statistics, customers, CVEs or testimonials.
 
@@ -17,3 +17,5 @@ Motion: 160–240ms controls, 400ms reveals; no infinite ambient animation. Stat
 Dark is the brand flagship; light is a warm engineering journal with crisp rules and strong ink. Both modes preserve hierarchy and semantic color, never simple inversion. System preference is initial behavior; explicit preference persists.
 
 Do: “Reproduce the finding. Verify the fix.” / Don’t: “Unparalleled cyber defense.” Do: show a real published advisory / Don’t: fabricate one to fill a layout.
+
+Maturity labels: mono 12px text tag with a visible text label; colour (verification cyan, action orange, outlined muted) reinforces but never carries meaning alone. Protocol diagrams are illustrative and labelled, never live telemetry or dashboards.

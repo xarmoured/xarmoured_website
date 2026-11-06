@@ -60,6 +60,7 @@ export default async function PublicLayout({ children }: { children: React.React
                   'API security testing',
                   'Android application security testing',
                   'Remediation validation and retesting',
+                  'Security research and responsible vulnerability disclosure',
                 ],
                 sameAs: [settings.linkedin, settings.github, settings.twitter, settings.youtube].filter(
                   Boolean

@@ -123,6 +123,12 @@ export const modules: Record<string, Module> = {
       f('disclosed_at', 'Disclosure date', 'date', 'Disclosure'),
       f('references', 'References (one URL per line)', 'textarea', 'Content'),
       f('researcher', 'Researcher attribution', undefined, 'Content'),
+      f(
+        'attribution_verified',
+        'Attribution verified against the public advisory',
+        'checkbox',
+        'Disclosure'
+      ),
       ...seo,
     ],
   },
@@ -198,8 +204,11 @@ export const modules: Record<string, Module> = {
       f('show_careers', 'Show careers callout', 'checkbox', 'Sections'),
       f('show_labs', 'Show Labs', 'checkbox', 'Sections'),
       ...[
+        'who',
         'problem',
         'services',
+        'defensive',
+        'protocol',
         'lifecycle',
         'principles',
         'case_studies',
