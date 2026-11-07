@@ -8,6 +8,7 @@ import {
   protocolComponents,
   direction,
 } from '@/lib/capabilities';
+import type { RecordData } from '@/lib/modules';
 
 /** Text label first, colour second: status never relies on colour alone. */
 export function MaturityTag({ maturity }: { maturity: Maturity }) {
@@ -127,6 +128,29 @@ export function AudiencePaths() {
         <Link key={a.title} href={a.href}>
           <h3>{a.title}</h3>
           <p>{a.text}</p>
+          <ArrowUpRight size={18} aria-hidden="true" />
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Published Solutions contexts (CMS `industries` records), shown as plain
+ * cards under the audience paths. Deliberately not the research archive UI:
+ * no search, severity, year filters or research labels.
+ */
+export function ContextList({ records }: { records: RecordData[] }) {
+  // Contexts already presented as audience paths are not repeated.
+  const covered = new Set(audiencePaths.map((a) => a.href));
+  const rest = records.filter((r) => !covered.has(`/industries/${r.slug}`));
+  if (!rest.length) return null;
+  return (
+    <div className="xa-use-cases xa-contexts">
+      {rest.map((r) => (
+        <Link key={r.id} href={`/industries/${r.slug}`}>
+          <h3>{r.title}</h3>
+          {r.data.summary && <p>{r.data.summary}</p>}
           <ArrowUpRight size={18} aria-hidden="true" />
         </Link>
       ))}

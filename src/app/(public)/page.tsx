@@ -245,10 +245,10 @@ export default async function Home({
             <MaturityTag maturity="development" />
           </div>
           <p className="xa-home-who">
-            Protocol is the security engineering platform we are developing to connect offensive
-            assessments, adversary simulation, defensive validation and security intelligence. It
-            starts from what every engagement already produces: findings, evidence, remediation and
-            retests. It is under active development and is not yet available.
+            Protocol is the security engineering platform we are developing. It starts from what
+            every engagement already produces: findings, evidence, remediation and retests.
+            Defensive validation and security intelligence are planned, and adversary simulation is
+            a longer-term ambition. Protocol is under active development and is not yet available.
           </p>
           <ProtocolComponentGrid compact />
           <div className="button-row">

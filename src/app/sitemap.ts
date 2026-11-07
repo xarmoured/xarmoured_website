@@ -24,6 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/partners',
     '/about',
     '/resources',
+    '/industries',
     '/assessment',
     '/privacy',
     '/terms',
@@ -56,7 +57,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     )
       continue;
     if (g.module === 'case_studies' && g.rows.length) add('/case-studies');
-    if (g.module === 'industries' && g.rows.length) add('/industries');
     for (const r of g.rows) {
       if (g.module === 'pages') {
         if (reserved.has(r.slug)) continue;

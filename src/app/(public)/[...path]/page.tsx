@@ -17,7 +17,7 @@ import { ProcessTimeline, ReportPreview, PublicationList } from '@/components/pu
 import { lifecycle } from '@/lib/lifecycle';
 import { enquiryTopics, researchAttribution } from '@/lib/capabilities';
 import { ProtocolPage, PartnersPage } from '@/components/company-pages';
-import { MaturityTag, AudiencePaths, DirectionList } from '@/components/protocol';
+import { MaturityTag, AudiencePaths, DirectionList, ContextList } from '@/components/protocol';
 import { Breadcrumbs, DetailSchema, pageMetadata } from '@/lib/seo';
 export async function generateMetadata({
   params,
@@ -61,7 +61,7 @@ export async function generateMetadata({
   };
   const fallbackDescriptions: Record<string, string> = {
     protocol:
-      'Protocol is the security engineering platform being developed by Xarmoured to connect offensive assessments, defensive validation and security intelligence. In development; not generally available.',
+      'Protocol is the security engineering platform being developed by Xarmoured, starting from offensive assessment evidence and retesting. Defensive validation and security intelligence are planned. In development; not generally available.',
     partners:
       'Xarmoured is open to collaboration with security consultancies, MSSPs, vendors and researchers. There is no formal partner program; collaboration is discussed case by case.',
   };
@@ -264,7 +264,9 @@ export default async function PublicPage({
         </article>
       );
     }
-    if (section !== 'resources' && !rows.length) notFound();
+    // Solutions renders its audience paths from code, so it must not 404 when
+    // the optional CMS context records are unavailable.
+    if (section === 'case-studies' && !rows.length) notFound();
     return (
       <div className="wrap section">
         {intro(
@@ -284,14 +286,24 @@ export default async function PublicPage({
               ? 'The problems we work on, and how to work with an independent, founder-led security engineering company, whether you build a product, run an enterprise or secure others.'
               : 'Real contexts, clear scope and documented outcomes.'
         )}
-        {section === 'industries' && (
+        {section === 'industries' ? (
           <>
             <AudiencePaths />
-            <h2 className="xa-solutions-heading">Application contexts we test</h2>
+            {rows.some(
+              (r) => !['saas', 'startups'].includes(r.slug) // already shown as audience paths
+            ) && (
+              <>
+                <h2 className="xa-solutions-heading">Application contexts we test</h2>
+                <ContextList records={rows} />
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <h2 className="sr-only">Published entries</h2>
+            <PublicationList records={rows} section={section} />
           </>
         )}
-        <h2 className="sr-only">Published entries</h2>
-        <PublicationList records={rows} section={section} />
       </div>
     );
   }
