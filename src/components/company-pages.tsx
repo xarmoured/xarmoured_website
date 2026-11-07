@@ -40,9 +40,9 @@ export function ProtocolPage({ extra }: { extra?: string }) {
         <span className="eyebrow">PROTOCOL · IN DEVELOPMENT</span>
         <h1>From finding vulnerabilities to proving security improvements.</h1>
         <p>
-          Protocol is the security engineering platform being developed by Xarmoured to connect
-          offensive assessments, adversary simulation, defensive validation and security
-          intelligence.
+          Protocol is the security engineering platform being developed by Xarmoured. It starts
+          from offensive assessment evidence, findings and retesting. Defensive validation and
+          security intelligence are planned, and adversary simulation is a longer-term ambition.
         </p>
         <div className="xa-notice" role="note">
           <MaturityTag maturity="development" />
