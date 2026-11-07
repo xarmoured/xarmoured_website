@@ -331,13 +331,13 @@
   padding-top: 15px;
 }
 .xa-hero h1 {
-  font-size: clamp(46px, 5.1vw, 78px);
-  letter-spacing: -0.065em;
-  line-height: 1.045;
+  font-size: clamp(36px, 4.5vw, 66px);
+  letter-spacing: -0.06em;
+  line-height: 1.06;
   font-weight: 500;
-  max-width: 12ch;
+  max-width: 14ch;
   margin: 28px 0;
-  white-space: pre-line;
+  text-wrap: balance;
 }
 .xa-hero-copy > p {
   max-width: 490px;
@@ -440,51 +440,6 @@
 .xa-map-connections {
   color: var(--border-strong);
 }
-.xa-map-path {
-  color: var(--accent);
-  transition:
-    stroke-dashoffset 1.1s cubic-bezier(0.45, 0, 0.25, 1),
-    color 0.4s ease;
-}
-.xa-map-probe {
-  color: var(--verification);
-  stroke-dashoffset: 0.07;
-  opacity: 0;
-}
-.xa-stage-4 .xa-map-probe {
-  opacity: 1;
-  animation: xa-probe 1.7s cubic-bezier(0.45, 0, 0.25, 1) 0.15s both;
-}
-@keyframes xa-probe {
-  from {
-    stroke-dashoffset: 0.07;
-  }
-  to {
-    stroke-dashoffset: -0.86;
-  }
-}
-.xa-map-examine {
-  stroke: var(--accent);
-  stroke-width: 1.5;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-.xa-stage-2 .xa-map-examine {
-  opacity: 1;
-}
-.xa-map-gate {
-  stroke: var(--verification);
-  opacity: 0;
-  transition: opacity 0.5s ease 0.5s;
-}
-.xa-stage-3 .xa-map-gate,
-.xa-stage-4 .xa-map-gate {
-  opacity: 1;
-}
-.is-verified .xa-map-path,
-.is-verified .xa-trust-line {
-  color: var(--verification);
-}
 .xa-trust-line {
   color: var(--accent);
   opacity: 0.7;
@@ -493,31 +448,6 @@
   font-family: var(--font-mono);
   font-size: 14px;
   fill: var(--text-secondary);
-}
-.xa-map-point {
-  fill: var(--surface-2);
-  stroke: var(--accent);
-  stroke-width: 1.5;
-  transition:
-    fill 0.4s ease,
-    stroke 0.4s ease;
-}
-.xa-map-point.is-reached {
-  fill: var(--accent-soft);
-}
-.xa-map-point:not(.is-reached) {
-  stroke: var(--border-strong);
-}
-.is-verified .xa-map-point {
-  stroke: var(--verification);
-}
-.xa-map-check {
-  fill: var(--verification);
-  opacity: 0;
-  transition: opacity 0.5s ease 1.6s;
-}
-.xa-stage-4 .xa-map-check {
-  opacity: 1;
 }
 .xa-map-legend {
   display: flex;
@@ -549,8 +479,7 @@
   font-size: 12px;
   min-height: 62px;
   border-right: 1px solid var(--border-subtle);
-  padding: 8px 2px;
-  overflow-wrap: normal;
+  padding: 8px 4px;
   color: var(--text-secondary);
 }
 .xa-map-controls button:last-child {
@@ -2242,20 +2171,359 @@ a.xa-direction-row:hover h3 {
   font-weight: 500;
 }
 
-/* Route loading fallback: hidden for fast navigations, quiet when shown. */
-.xa-route-loading {
-  min-height: 60vh;
+/* Hero attack-path sequence: Discover → Trace → Validate → Remediate → Verify.
+   CSS-only movement. Layers are keyed to the stage on .xa-boundary-map[data-step]. */
+.xa-boundary-map {
+  --xa-draw: 1.6s cubic-bezier(0.4, 0, 0.2, 1);
+  --xa-fade: 0.6s ease;
+}
+.xa-map-links {
+  opacity: 0.3;
+  transition: opacity var(--xa-fade);
+}
+.xa-boundary-map:not([data-step='0']) .xa-map-links {
+  opacity: 0.6;
+}
+.xa-p,
+.xa-p-ghost,
+.xa-gate path {
+  fill: none;
+  stroke-linecap: square;
+}
+.xa-p {
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition:
+    stroke-dashoffset var(--xa-draw),
+    opacity var(--xa-fade),
+    stroke var(--xa-fade);
+}
+.xa-p-entry,
+[data-step='1'] .xa-p-trace,
+[data-step='2'] .xa-p-trace,
+[data-step='3'] .xa-p-trace,
+[data-step='4'] .xa-p-trace,
+[data-step='2'] .xa-p-impact,
+[data-step='4'] .xa-p-verify {
+  stroke-dashoffset: 0;
+}
+.xa-p-impact {
+  transition-delay: 0s;
+}
+[data-step='3'] .xa-p-impact,
+[data-step='4'] .xa-p-impact {
+  stroke-dashoffset: 0;
   opacity: 0;
-  animation: xa-route-loading-in 0.2s ease 0.4s forwards;
 }
-.xa-route-loading-bar {
-  display: block;
-  width: 96px;
-  height: 2px;
-  background: var(--border-strong);
+[data-step='4'] .xa-p-trace {
+  opacity: 0.3;
 }
-@keyframes xa-route-loading-in {
+.xa-p-verify {
+  stroke: var(--verification);
+  stroke-width: 2.5;
+  transition:
+    stroke-dashoffset 2s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity var(--xa-fade),
+    stroke var(--xa-fade);
+}
+.xa-p-ghost {
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 6;
+  opacity: 0;
+  transition: opacity var(--xa-fade) 0.3s;
+}
+[data-step='3'] .xa-p-ghost,
+[data-step='4'] .xa-p-ghost {
+  opacity: 0.8;
+}
+.xa-gate path {
+  stroke: var(--accent);
+  stroke-width: 3;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scaleX(0.2);
+  transition:
+    opacity var(--xa-fade) 0.5s,
+    transform var(--xa-fade) 0.5s,
+    stroke var(--xa-fade);
+}
+[data-step='3'] .xa-gate path,
+[data-step='4'] .xa-gate path {
+  opacity: 1;
+  transform: scaleX(1);
+}
+[data-step='4'] .xa-gate path {
+  stroke: var(--verification);
+}
+.xa-trust-line {
+  color: var(--accent);
+  opacity: 0.7;
+  transition: color var(--xa-fade);
+}
+.is-verified .xa-trust-line {
+  color: var(--verification);
+}
+.xa-map-point {
+  fill: var(--surface-2);
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+  transition: stroke var(--xa-fade);
+}
+.xa-map-point.is-on {
+  stroke: var(--accent);
+}
+.xa-map-point.is-verified-node {
+  stroke: var(--verification);
+}
+.n-app,
+.n-api {
+  transition-delay: 0.7s;
+}
+.n-api {
+  transition-delay: 1.3s;
+}
+.n-data {
+  transition-delay: 0.9s;
+}
+[data-step='0'] .n-app,
+[data-step='0'] .n-api,
+[data-step='3'] .n-data,
+[data-step='4'] .n-data {
+  transition-delay: 0s;
+}
+.xa-map-check {
+  fill: var(--verification);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0.6);
+  transition:
+    opacity var(--xa-fade),
+    transform var(--xa-fade);
+}
+[data-step='4'] .xa-map-check {
+  opacity: 1;
+  transform: scale(1);
+  transition-delay: 1.9s;
+}
+.xa-pulse {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  opacity: 0;
+}
+.xa-map-legend > span:first-child {
+  transition: color var(--xa-fade);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .xa-p-entry {
+    animation: xa-draw 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.2s backwards;
+  }
+  .xa-pulse {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: xa-pulse 1.4s ease-out 0.9s 1 both;
+  }
+}
+@keyframes xa-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
   to {
-    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes xa-pulse {
+  from {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+@media (max-width: 430px) {
+  .xa-map-controls button {
+    font-size: 11px;
+    padding-inline: 2px;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Homepage: available services, how-we-work values, Protocol line */
+.xa-service-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--border-strong);
+  margin-top: 8px;
+}
+.xa-service-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px 24px 28px 0;
+  border-right: 1px solid var(--border-subtle);
+  padding-left: 24px;
+}
+.xa-service-card:first-child {
+  padding-left: 0;
+}
+.xa-service-card:last-child {
+  border-right: 0;
+}
+.xa-service-card .mono {
+  color: var(--accent);
+  font-size: 12px;
+}
+.xa-service-card h3 {
+  font-size: 22px;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+}
+.xa-service-card p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.xa-service-link {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--accent);
+}
+.xa-service-card:hover h3 {
+  color: var(--accent);
+}
+.xa-how-intro {
+  max-width: 72ch;
+  color: var(--text-secondary);
+  margin: 0 0 40px;
+}
+.xa-how-values {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin-top: 56px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border-subtle);
+}
+.xa-how-values h3 {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+.xa-how-values p {
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+.xa-lifecycle-line {
+  margin: 24px 0;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+}
+@media (max-width: 1100px) {
+  .xa-service-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .xa-service-card:nth-child(2) {
+    border-right: 0;
+  }
+  .xa-service-card:nth-child(n + 3) {
+    border-top: 1px solid var(--border-subtle);
+  }
+  .xa-service-card:nth-child(odd) {
+    padding-left: 0;
+  }
+  .xa-how-values {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .xa-service-grid {
+    grid-template-columns: 1fr;
+  }
+  .xa-service-card {
+    border-right: 0;
+    padding-left: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .xa-service-card:first-child {
+    border-top: 0;
+  }
+}
+.xa-audience-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 48px;
+  padding: 40px 0;
+  border-top: 1px solid var(--border-subtle);
+}
+.xa-audience-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.xa-audience-row h2 {
+  font-size: clamp(26px, 2.6vw, 36px);
+  margin: 0 0 12px;
+  max-width: none;
+}
+.xa-audience-row p {
+  color: var(--text-secondary);
+  max-width: 62ch;
+  margin-bottom: 16px;
+}
+.xa-audience-row ul {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+.xa-audience-row li {
+  padding: 10px 0;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 15px;
+}
+.xa-audience-row .mono {
+  font-size: 12px;
+  color: var(--accent);
+}
+@media (max-width: 760px) {
+  .xa-audience-row {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+.xa-maturity-key {
+  display: grid;
+  gap: 8px;
+  margin: 24px 0 0;
+  padding: 0;
+  max-width: 640px;
+}
+.xa-maturity-key > div {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.xa-maturity-key dt {
+  flex: 0 0 160px;
+  margin: 0;
+}
+.xa-maturity-key dd {
+  margin: 0;
+}
+@media (max-width: 760px) {
+  .xa-maturity-key > div {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
   }
 }

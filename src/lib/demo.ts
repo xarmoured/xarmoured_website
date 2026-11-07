@@ -38,7 +38,7 @@ export const initialHome = row('home', 'Homepage', 'home', 'published', {
   secondary_url: '/protocol',
   services_heading: 'Different systems.\nThe same depth of attention.',
   research_heading: 'Questions worth\nfollowing further.',
-  final_cta: 'Put your security\nassumptions to the test.',
+  final_cta: 'Have an application\nthat needs testing?',
   show_research: true,
   show_report: true,
   show_careers: true,

@@ -273,10 +273,7 @@ export function PublicationList({
           <Link className="xa-research-row" href={`/${section}/${r.slug}`} key={r.id}>
             <div className="xa-research-id">
               <span className="mono">
-                {r.data.cve ||
-                  r.data.advisory ||
-                  r.data.category ||
-                  (section === 'research' ? 'RESEARCH' : section === 'resources' ? 'RESOURCE' : 'ENTRY')}
+                {r.data.cve || r.data.advisory || r.data.category || 'RESEARCH'}
               </span>
               <time dateTime={date(r)}>
                 {new Date(date(r)).toLocaleDateString('en-GB', {

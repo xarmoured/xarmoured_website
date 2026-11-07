@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import type { RecordData } from '@/lib/modules';
 import {
+  currentServices,
   type Maturity,
   maturityLabel,
   evidenceLifecycle,
@@ -8,7 +10,6 @@ import {
   protocolComponents,
   direction,
 } from '@/lib/capabilities';
-import type { RecordData } from '@/lib/modules';
 
 /** Text label first, colour second: status never relies on colour alone. */
 export function MaturityTag({ maturity }: { maturity: Maturity }) {
@@ -98,60 +99,26 @@ export function DirectionList() {
   );
 }
 
-export const audiencePaths = [
-  {
-    title: 'SaaS and product teams',
-    text: 'Protect the boundaries between users, workspaces and organizations.',
-    href: '/industries/saas',
-  },
-  {
-    title: 'Startups',
-    text: 'Prioritize exploitable risk in critical workflows without an oversized security program.',
-    href: '/industries/startups',
-  },
-  {
-    title: 'Enterprises',
-    text: 'Written authorization, validated evidence, retest verification and clearly stated limits, from an independent, founder-led team.',
-    href: '/how-we-work',
-  },
-  {
-    title: 'Security providers',
-    text: 'Collaboration with consultancies, MSSPs and vendors, case by case. There is no formal partner program.',
-    href: '/partners',
-  },
-];
-
-export function AudiencePaths() {
+/** The commercial services available today, always visible with a link to the detail. */
+export function AvailableServices({ services }: { services: RecordData[] }) {
+  const items = services.length
+    ? services.map((s) => ({
+        key: s.id,
+        title: s.title,
+        text: String(s.data.summary || ''),
+        href: `/services/${s.slug}`,
+      }))
+    : currentServices.map((s) => ({ key: s.title, ...s, href: '/services' }));
   return (
-    <div className="xa-use-cases xa-audiences">
-      {audiencePaths.map((a) => (
-        <Link key={a.title} href={a.href}>
-          <h3>{a.title}</h3>
-          <p>{a.text}</p>
-          <ArrowUpRight size={18} aria-hidden="true" />
-        </Link>
-      ))}
-    </div>
-  );
-}
-
-/**
- * Published Solutions contexts (CMS `industries` records), shown as plain
- * cards under the audience paths. Deliberately not the research archive UI:
- * no search, severity, year filters or research labels.
- */
-export function ContextList({ records }: { records: RecordData[] }) {
-  // Contexts already presented as audience paths are not repeated.
-  const covered = new Set(audiencePaths.map((a) => a.href));
-  const rest = records.filter((r) => !covered.has(`/industries/${r.slug}`));
-  if (!rest.length) return null;
-  return (
-    <div className="xa-use-cases xa-contexts">
-      {rest.map((r) => (
-        <Link key={r.id} href={`/industries/${r.slug}`}>
-          <h3>{r.title}</h3>
-          {r.data.summary && <p>{r.data.summary}</p>}
-          <ArrowUpRight size={18} aria-hidden="true" />
+    <div className="xa-service-grid">
+      {items.map((s, i) => (
+        <Link key={s.key} href={s.href} className="xa-service-card">
+          <span className="mono">{String(i + 1).padStart(2, '0')}</span>
+          <h3>{s.title}</h3>
+          <p>{s.text}</p>
+          <span className="xa-service-link">
+            Scope and deliverables <ArrowUpRight size={16} aria-hidden="true" />
+          </span>
         </Link>
       ))}
     </div>

@@ -17,6 +17,26 @@ export const maturityLabel: Record<Maturity, string> = {
 /** What Xarmoured delivers as a service today. */
 export const offensiveServices: Maturity = 'available';
 
+/** The four commercial services available now. Used as a fallback when the CMS has none published. */
+export const currentServices: { title: string; text: string }[] = [
+  {
+    title: 'Web Application Penetration Testing',
+    text: 'Manual testing of authentication, authorization and business logic, with exploitability proven by evidence.',
+  },
+  {
+    title: 'API Security Testing',
+    text: 'Authorization, tenant isolation and workflow abuse tested across your API surface.',
+  },
+  {
+    title: 'Android Mobile Security Testing',
+    text: 'Analysis of the app, its local data storage and its communication with the backend.',
+  },
+  {
+    title: 'Retesting and Remediation Validation',
+    text: 'The original attack path repeated against your fix, with a recorded result.',
+  },
+];
+
 /** Company direction, shown on About and the Services index. */
 export const direction: { title: string; text: string; maturity: Maturity; href?: string }[] = [
   {
@@ -53,28 +73,35 @@ export const protocolComponents: {
   {
     name: 'Protocol Core',
     role: 'The shared foundation',
-    text: 'Organization and tenant boundaries, role-based access, shared assets, evidence storage, audit logs, APIs, integrations and notifications.',
+    text: 'Being designed to provide organization and tenant boundaries, role-based access, shared assets, evidence storage, audit logs, APIs, integrations and notifications. None of these is offered to external users.',
     maturity: 'development',
   },
   {
     name: 'Protocol Attack',
     role: 'Evidence-led offensive assessment',
-    text: 'Engagement and asset management, findings with CWE and CVSS mapping, evidence, reporting and retesting. Controlled attack scenarios and adversary emulation are later ambitions.',
+    text: 'Being built around engagement and asset management, findings with CWE and CVSS mapping, evidence, reporting and retesting. Planned for later: controlled attack scenarios and adversary emulation, which are not being built yet.',
     maturity: 'development',
   },
   {
     name: 'Protocol Defend',
     role: 'Defensive validation and hunting',
-    text: 'Security telemetry, SIEM and EDR integrations, detection rule management, hunt libraries and investigation workflows, mapped to MITRE ATT&CK.',
+    text: 'Intended to cover security telemetry, SIEM and EDR integrations, detection rule management, hunt libraries and investigation workflows, mapped to MITRE ATT&CK. Not a SIEM or EDR, and no integrations exist.',
     maturity: 'planned',
   },
   {
     name: 'Protocol Intelligence',
     role: 'Research and threat context',
-    text: 'CVE and advisory intelligence, attack techniques and threat research, linked to attack scenarios and detections.',
+    text: 'Intended to link CVE and advisory intelligence, attack techniques and threat research to attack scenarios and detections. Not started as a product.',
     maturity: 'planned',
   },
 ];
+
+/** What each label means on this site. No Protocol capability is currently AVAILABLE NOW. */
+export const maturityDefinitions: Record<Maturity, string> = {
+  available: 'Usable today. No part of Protocol is listed here.',
+  development: 'Being built. Not available to use.',
+  planned: 'Intended direction. Not yet being built.',
+};
 
 /** Protocol's evidence lineage: the spine of the product idea. */
 export const evidenceLifecycle: { step: string; text: string }[] = [

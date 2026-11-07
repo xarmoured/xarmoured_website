@@ -1,10 +1,58 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { findRedirect } from './lib/redirects';
+import { classifyPath, type RouteIndex } from './lib/route-index';
+import { notFoundHtml } from './lib/not-found-html';
 let redirectCache: { until: number; rows: { data: Record<string, any> }[] } = {
   until: 0,
   rows: [],
 };
+let routeIndex: { at: number; value: RouteIndex } | null = null;
+let inflight: Promise<RouteIndex | null> | null = null;
+/** Fetch the index; concurrent callers share one request. Returns null on any failure. */
+function loadRouteIndex(origin: string): Promise<RouteIndex | null> {
+  inflight ??= (async () => {
+    try {
+      const res = await fetch(new URL('/api/route-index', origin), {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(1500),
+      });
+      if (!res.ok) return null;
+      const value = (await res.json()) as RouteIndex;
+      routeIndex = { at: Date.now(), value };
+      return value;
+    } catch {
+      return null;
+    }
+  })().finally(() => {
+    inflight = null;
+  });
+  return inflight;
+}
+/**
+ * 'missing' only when the path certainly cannot resolve. Any lookup problem fails open, so an
+ * index outage can never take pages down; the page then decides (and serves a soft 404).
+ */
+async function routeVerdict(request: NextRequest): Promise<'ok' | 'missing'> {
+  const origin = request.nextUrl.origin;
+  const pathname = request.nextUrl.pathname;
+  const opts = { preview: request.nextUrl.searchParams.get('preview') === 'true' };
+  // Paths that are certainly fine (home, api, static files, code-rendered routes) never need the
+  // index. This also prevents the index request itself from recursing through the proxy.
+  if (classifyPath(pathname, { pages: [], details: {}, redirects: [] }, opts) === 'ok') return 'ok';
+  let index = routeIndex && Date.now() - routeIndex.at < 10_000 ? routeIndex.value : null;
+  index ??= (await loadRouteIndex(origin)) ?? routeIndex?.value ?? null;
+  if (!index) return 'ok';
+  const verdict = classifyPath(pathname, index, opts);
+  // A just-published page must not 404. If the index is more than a second old, check once more
+  // against a fresh copy. At most one index request per second per instance, however many
+  // unknown URLs are requested.
+  if (verdict === 'missing' && routeIndex && Date.now() - routeIndex.at >= 1000) {
+    const latest = await loadRouteIndex(origin);
+    if (latest) return classifyPath(pathname, latest, opts);
+  }
+  return verdict;
+}
 export async function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
   const csp =
@@ -95,6 +143,20 @@ export async function proxy(request: NextRequest) {
       /* A missing optional redirect integration does not break the website. */
     }
   }
+  if (
+    (request.method === 'GET' || request.method === 'HEAD') &&
+    (await routeVerdict(request)) === 'missing'
+  )
+    return secure(
+      new NextResponse(notFoundHtml(), {
+        status: 404,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'X-Robots-Tag': 'noindex',
+          'Cache-Control': 'no-store',
+        },
+      })
+    );
   return secure(response);
 }
 export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'] };

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { currentUser, supabase, isDemo } from '@/lib/server';
 import { can } from '@/lib/modules';
+import { readLimitedForm } from '@/lib/body-limit';
 export async function POST(req: Request) {
   const user = await currentUser();
   if (
@@ -13,9 +14,9 @@ export async function POST(req: Request) {
   try {
     if (isDemo)
       throw new Error('Connect Supabase Storage to upload real files. Demo records remain local.');
-    if (Number(req.headers.get('content-length') || 0) > 11000000)
+    const fd = await readLimitedForm(req, 11000000).catch(() => {
       throw new Error('Use a file under 10 MB.');
-    const fd = await req.formData();
+    });
     const file = fd.get('file');
     const bucket = String(fd.get('bucket'));
     if (

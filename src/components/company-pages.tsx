@@ -8,7 +8,8 @@ import {
   MaturityTag,
 } from '@/components/protocol';
 import { Markdown } from '@/components/markdown';
-import { validationQuestions } from '@/lib/capabilities';
+import { validationQuestions, maturityDefinitions } from '@/lib/capabilities';
+import type { RecordData } from '@/lib/modules';
 
 const designGoals: [string, string][] = [
   [
@@ -40,15 +41,16 @@ export function ProtocolPage({ extra }: { extra?: string }) {
         <span className="eyebrow">PROTOCOL · IN DEVELOPMENT</span>
         <h1>From finding vulnerabilities to proving security improvements.</h1>
         <p>
-          Protocol is the security engineering platform being developed by Xarmoured. It starts
-          from offensive assessment evidence, findings and retesting. Defensive validation and
-          security intelligence are planned, and adversary simulation is a longer-term ambition.
+          Protocol is the security engineering platform being developed by Xarmoured to connect
+          offensive assessments, adversary simulation, defensive validation and security
+          intelligence.
         </p>
         <div className="xa-notice" role="note">
           <MaturityTag maturity="development" />
           <span>
-            Protocol is under active development. It is not a generally available product: there is
-            no public release, pricing or launch date.
+            Protocol is under active development. No Protocol capability is available today. It has
+            no public release, pricing or launch date, and Xarmoured is not accepting users,
+            early-access requests or integrations.
           </span>
         </div>
         <div className="button-row">
@@ -102,9 +104,18 @@ export function ProtocolPage({ extra }: { extra?: string }) {
         <span className="eyebrow">04 / ARCHITECTURE</span>
         <h2>Four components, one shared foundation.</h2>
         <p>
-          Labels show what we are prepared to claim today. Nothing on this page is generally
-          available.
+          Labels show what we are prepared to claim today. Nothing on this page is available to use.
         </p>
+        <dl className="xa-maturity-key">
+          {(['available', 'development', 'planned'] as const).map((m) => (
+            <div key={m}>
+              <dt>
+                <MaturityTag maturity={m} />
+              </dt>
+              <dd>{maturityDefinitions[m]}</dd>
+            </div>
+          ))}
+        </dl>
         <ProtocolComponentGrid />
       </section>
 
@@ -114,7 +125,8 @@ export function ProtocolPage({ extra }: { extra?: string }) {
         <p>
           The longer ambition is to carry the same evidence trail across the boundary between attack
           and defense. Intelligence informs the attack. Attack validates the defense. Defense
-          identifies gaps. Validation measures improvement. None of this loop is implemented today.
+          identifies gaps. Validation measures improvement. This is a long-term direction, not a
+          feature: none of this loop is built or available today.
         </p>
         <ValidationLoop />
         <ul className="xa-questions">
@@ -163,7 +175,11 @@ export function ProtocolPage({ extra }: { extra?: string }) {
           </li>
           <li>Not a vulnerability scanner.</li>
           <li>Not a managed service or a monitoring operation.</li>
-          <li>Not generally available, with no public pricing, release or early-access program.</li>
+          <li>Not available, with no public pricing, release or early-access program.</li>
+          <li>
+            Not accepting users, and not ready for integrations: no APIs or integrations are
+            published.
+          </li>
         </ul>
       </section>
 
@@ -254,6 +270,128 @@ export function PartnersPage() {
         </p>
         <div className="button-row">
           <ButtonLink href="/assessment?topic=partnership">Start a conversation</ButtonLink>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+const audiences: {
+  title: string;
+  text: string;
+  delivers: string[];
+  slug?: string;
+  href?: string;
+  cta?: string;
+}[] = [
+  {
+    title: 'SaaS and product teams',
+    text: 'Protect the boundaries between users, workspaces and organizations in the product you ship.',
+    delivers: [
+      'Web Application Penetration Testing',
+      'API Security Testing',
+      'Retesting and Remediation Validation',
+    ],
+    slug: 'saas',
+  },
+  {
+    title: 'Startups',
+    text: 'Find the exploitable risk in your critical workflows without buying an oversized security program.',
+    delivers: [
+      'Web Application Penetration Testing',
+      'API Security Testing',
+      'Retesting and Remediation Validation',
+    ],
+    slug: 'startups',
+  },
+  {
+    title: 'Enterprises',
+    text: 'Application-level assessments with written authorization, validated evidence, retest verification and clearly stated limits. Xarmoured is an independent, founder-led company, not a managed security provider.',
+    delivers: [
+      'Web Application Penetration Testing',
+      'API Security Testing',
+      'Android Mobile Security Testing',
+      'Retesting and Remediation Validation',
+    ],
+    href: '/methodology',
+    cta: 'How we scope and report',
+  },
+  {
+    title: 'Security providers',
+    text: 'Collaboration with consultancies, MSSPs and vendors, discussed case by case. There is no formal partner program.',
+    delivers: [
+      'Assessment collaboration',
+      'Research collaboration',
+      'Protocol discussions (in development)',
+    ],
+    href: '/partners',
+    cta: 'Collaboration options',
+  },
+];
+
+/** Solutions: audience paths and the services delivered today. Renders without any CMS rows. */
+export function SolutionsPage({ industries }: { industries: RecordData[] }) {
+  const detail = (slug?: string) => industries.find((r) => r.slug === slug);
+  return (
+    <div className="wrap section xa-protocol">
+      <Reveal className="page-intro">
+        <span className="eyebrow">SOLUTIONS</span>
+        <h1>{'Security in your\nenvironment.'}</h1>
+        <p>
+          Who we work with and what we deliver for them today. Our available services are web
+          application, API and Android security testing, with retesting to verify the fix.
+        </p>
+      </Reveal>
+      <section className="xa-protocol-section">
+        {audiences.map((a) => {
+          const record = detail(a.slug);
+          const href = record ? `/industries/${record.slug}` : a.href;
+          return (
+            <div className="xa-audience-row" key={a.title}>
+              <div>
+                <h2>{a.title}</h2>
+                <p>{a.text}</p>
+                {href && (
+                  <Link className="text-link" href={href}>
+                    {a.cta || 'Read more'} <ArrowUpRight size={17} aria-hidden="true" />
+                  </Link>
+                )}
+              </div>
+              <div>
+                <span className="mono">WHAT WE CAN DELIVER</span>
+                <ul>
+                  {a.delivers.map((d) => (
+                    <li key={d}>{d}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          );
+        })}
+      </section>
+      {industries.length > 0 && (
+        <section className="xa-protocol-section">
+          <span className="eyebrow">APPLICATION CONTEXTS</span>
+          <h2>Where this applies.</h2>
+          <div className="xa-use-cases">
+            {industries.map((r) => (
+              <Link key={r.id} href={`/industries/${r.slug}`}>
+                <h3>{r.title}</h3>
+                <p>{r.data.summary}</p>
+                <ArrowUpRight size={18} aria-hidden="true" />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+      <section className="xa-protocol-section">
+        <span className="eyebrow">NEXT STEP</span>
+        <h2>Have an application that needs testing?</h2>
+        <div className="button-row">
+          <ButtonLink href="/assessment">Request an Assessment</ButtonLink>
+          <Link className="text-link" href="/services">
+            See all services <ArrowUpRight size={17} aria-hidden="true" />
+          </Link>
         </div>
       </section>
     </div>

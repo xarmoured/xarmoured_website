@@ -3,10 +3,17 @@ import AxeBuilder from '@axe-core/playwright';
 test('boundary states, lifecycle and report anatomy are operable', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Engineering security');
-  await page.getByRole('button', { name: '04 Verified', exact: true }).click();
+  // The hero sequence has five stages and stops autoplay when a stage is chosen manually.
+  await page.getByRole('button', { name: '05 Verify', exact: true }).click();
   await expect(page.getByText('The original path no longer holds.', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '02 Trace', exact: true }).click();
+  await expect(
+    page.getByText('Follow the path through the system.', { exact: true })
+  ).toBeVisible();
   await page.getByRole('button', { name: '07 Retest', exact: true }).click();
   await expect(page.getByText('Output: a documented verification result')).toBeVisible();
+  // The report anatomy lives on its own page, not the homepage.
+  await page.goto('/sample-report');
   await page.getByRole('button', { name: '04 Evidence & reproduction', exact: true }).click();
   await expect(
     page.getByRole('heading', { name: 'Make the behavior reproducible.' })

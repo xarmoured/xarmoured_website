@@ -10,14 +10,15 @@ import {
 } from '@/lib/server';
 import { rateLimit } from '@/lib/rate-limit';
 import { sendEmail } from '@/lib/email';
+import { readLimitedForm } from '@/lib/body-limit';
+const MAX_BODY = 6000000;
 export async function POST(req: Request) {
   if (req.headers.get('origin') !== new URL(req.url).origin)
     return NextResponse.json({ error: 'Invalid request origin.' }, { status: 403 });
   try {
-    if (Number(req.headers.get('content-length') || 0) > 6000000)
-      throw new Error('The upload is too large.');
     await rateLimit('submission', 6);
-    const form = await req.formData();
+    // Enforces the limit on the bytes actually received, not only the content-length header.
+    const form = await readLimitedForm(req, MAX_BODY);
     const type = form.get('type');
     if (!['assessment', 'application'].includes(String(type)))
       return NextResponse.json({ error: 'Unsupported submission type.' }, { status: 422 });
@@ -146,7 +147,7 @@ export async function POST(req: Request) {
       await sendEmail(
         process.env.ADMIN_NOTIFICATION_EMAIL,
         `New ${module === 'leads' ? 'assessment request' : 'application'}`,
-        `Reference: ${ref}\nReview securely at ${process.env.NEXT_PUBLIC_SITE_URL}/admin/${module}/${id}`,
+        `Reference: ${ref}\nReview securely at ${process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin}/admin/${module}/${id}`,
         id
       );
     return NextResponse.json({

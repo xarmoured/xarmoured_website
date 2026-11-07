@@ -16,8 +16,8 @@ import { SubmissionForm } from '@/components/submission-form';
 import { ProcessTimeline, ReportPreview, PublicationList } from '@/components/public-experiences';
 import { lifecycle } from '@/lib/lifecycle';
 import { enquiryTopics, researchAttribution } from '@/lib/capabilities';
-import { ProtocolPage, PartnersPage } from '@/components/company-pages';
-import { MaturityTag, AudiencePaths, DirectionList, ContextList } from '@/components/protocol';
+import { ProtocolPage, PartnersPage, SolutionsPage } from '@/components/company-pages';
+import { MaturityTag, DirectionList } from '@/components/protocol';
 import { Breadcrumbs, DetailSchema, pageMetadata } from '@/lib/seo';
 export async function generateMetadata({
   params,
@@ -61,7 +61,9 @@ export async function generateMetadata({
   };
   const fallbackDescriptions: Record<string, string> = {
     protocol:
-      'Protocol is the security engineering platform being developed by Xarmoured, starting from offensive assessment evidence and retesting. Defensive validation and security intelligence are planned. In development; not generally available.',
+      'Protocol is the security engineering platform being developed by Xarmoured to connect offensive assessments, defensive validation and security intelligence. In development; not generally available.',
+    industries:
+      'Who Xarmoured works with and the services delivered today: web application, API and Android security testing and retesting for SaaS teams, startups, enterprises and security providers.',
     partners:
       'Xarmoured is open to collaboration with security consultancies, MSSPs, vendors and researchers. There is no formal partner program; collaboration is discussed case by case.',
   };
@@ -193,6 +195,13 @@ export default async function PublicPage({
       </div>
     );
   }
+  if (section === 'industries' && !slug)
+    return (
+      <>
+        {previewBanner}
+        <SolutionsPage industries={await listRecords('industries', true)} />
+      </>
+    );
   if (['resources', 'case-studies', 'industries'].includes(section)) {
     const module = section === 'case-studies' ? 'case_studies' : section;
     const rows = await listRecords(module, true);
@@ -264,17 +273,11 @@ export default async function PublicPage({
         </article>
       );
     }
-    // Solutions renders its audience paths from code, so it must not 404 when
-    // the optional CMS context records are unavailable.
-    if (section === 'case-studies' && !rows.length) notFound();
+    if (section !== 'resources' && !rows.length) notFound();
     return (
       <div className="wrap section">
         {intro(
-          section === 'resources'
-            ? 'THE RESOURCE LIBRARY'
-            : section === 'industries'
-              ? 'SOLUTIONS'
-              : 'FROM THE PRACTICE',
+          section === 'resources' ? 'THE RESOURCE LIBRARY' : 'FROM THE PRACTICE',
           section === 'resources'
             ? 'Knowledge you can\nput to work.'
             : section === 'case-studies'
@@ -282,37 +285,32 @@ export default async function PublicPage({
               : 'Security in your\nenvironment.',
           section === 'resources'
             ? 'Technical articles, guides and resources. Published when there is something useful to share.'
-            : section === 'industries'
-              ? 'The problems we work on, and how to work with an independent, founder-led security engineering company, whether you build a product, run an enterprise or secure others.'
-              : 'Real contexts, clear scope and documented outcomes.'
+            : 'Real contexts, clear scope and documented outcomes.'
         )}
-        {section === 'industries' ? (
-          <>
-            <AudiencePaths />
-            {rows.some(
-              (r) => !['saas', 'startups'].includes(r.slug) // already shown as audience paths
-            ) && (
-              <>
-                <h2 className="xa-solutions-heading">Application contexts we test</h2>
-                <ContextList records={rows} />
-              </>
-            )}
-          </>
-        ) : (
-          <>
-            <h2 className="sr-only">Published entries</h2>
-            <PublicationList records={rows} section={section} />
-          </>
-        )}
+        <h2 className="sr-only">Published entries</h2>
+        <PublicationList records={rows} section={section} />
       </div>
     );
   }
   if (section === 'security') {
-    const policy = settings.disclosure_policy_enabled
-      ? await getRecord('pages', 'security', true)
-      : undefined;
+    // Public visitors see the policy only when the page is published AND the review switch is on.
+    // A signed-in preview shows the saved draft regardless, so it can be reviewed before publishing.
+    const policy =
+      settings.disclosure_policy_enabled || previewPage
+        ? await getRecord('pages', 'security', !previewPage)
+        : undefined;
     return (
       <div className="wrap section narrow">
+        {previewBanner}
+        {previewPage && !settings.disclosure_policy_enabled && (
+          <div className="xa-notice" role="note">
+            <span className="xa-tag">PREVIEW</span>
+            <span>
+              Visitors will not see this policy until “Publish reviewed disclosure policy” is
+              enabled in Settings and the page is published.
+            </span>
+          </div>
+        )}
         {intro(
           'RESPONSIBLE DISCLOSURE',
           'Found a security issue?',
@@ -350,7 +348,10 @@ export default async function PublicPage({
           </p>
         </div>
         {policy?.data.content && <Markdown>{policy.data.content}</Markdown>}
-        <p>No bounty, response deadline or testing authorization is offered by this page.</p>
+        <p>
+          Xarmoured does not currently operate a paid bug bounty program. This page does not offer
+          rewards, guaranteed response or remediation deadlines, or authorization to test systems.
+        </p>
       </div>
     );
   }

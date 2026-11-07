@@ -77,8 +77,22 @@ export default async function Dashboard() {
         </Link>
       </div>
     );
+  // The disclosure policy has three independent switches; name the first one still missing.
+  const securityPage = pages.find((r) => r.slug === 'security');
+  const disclosureStep = !settings.security_email
+    ? ['Add a security contact email for disclosure', false, '/admin/settings']
+    : securityPage?.status !== 'published'
+      ? [
+          'Publish the responsible disclosure policy page (it is not published)',
+          false,
+          '/admin/pages',
+        ]
+      : !settings.disclosure_policy_enabled
+        ? ['Turn on “Publish reviewed disclosure policy” in Settings', false, '/admin/settings']
+        : ['Responsible disclosure policy is published', true, '/security'];
   const checklist = [
     ['Add company details', !!settings.company, '/admin/settings'],
+    disclosureStep as [string, boolean, string],
     ['Configure sales email', !!settings.sales_email, '/admin/settings'],
     ['Review email integrations', !!process.env.RESEND_API_KEY, '/admin/settings'],
     ['Configure assessment protection', !!process.env.TURNSTILE_SECRET_KEY, '/admin/settings'],

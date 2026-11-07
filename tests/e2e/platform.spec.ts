@@ -59,7 +59,9 @@ test.describe.serial('Owner workflows in explicitly isolated development demo', 
     await page.getByLabel('Your name').fill('DEMO · Browser Contact');
     await page.getByLabel('Work email').fill('browser-lead@example.com');
     await page.getByLabel('Company', { exact: false }).fill('DEMO · Browser Company');
-    await page.getByLabel('What would you like tested?').selectOption('API Security Testing');
+    await page
+      .getByLabel('What would you like tested or discussed?')
+      .selectOption('API Security Testing');
     await page.getByRole('button', { name: 'Request an assessment' }).click();
     await expect(page.getByRole('heading', { name: 'Let’s start a conversation.' })).toBeVisible();
     await page.goto('/admin/leads');
